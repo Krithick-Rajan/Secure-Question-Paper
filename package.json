@@ -5,7 +5,12 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "build": "node --check server.js",
+    "test": "node --check server.js"
+  },
+  "engines": {
+    "node": ">=20 <25"
   },
   "keywords": [
     "security",

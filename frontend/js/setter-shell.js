@@ -13,7 +13,7 @@ function createSetterSidebar() {
             </div>
 
             <div class="brand-text">
-                <div class="brand-name">SECURE CUSTODY</div>
+                <div class="brand-name">SECURE QUESTION PAPER</div>
                 <div class="brand-caption">SETTER PORTAL</div>
             </div>
 
@@ -65,7 +65,7 @@ function createSetterTopbar() {
 
     topbar.innerHTML = `
         <div class="breadcrumb">
-            <span>Secure Custody</span>
+            <span>Secure Question Paper</span>
             <b>/</b>
             <strong>Setter Portal</strong>
         </div>

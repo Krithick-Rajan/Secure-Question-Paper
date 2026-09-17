@@ -85,7 +85,7 @@ function createSidebar() {
             <div class="brand-text">
 
                 <div class="brand-name">
-                    SECURE CUSTODY
+                    SECURE QUESTION PAPER
                 </div>
 
                 <div class="brand-caption">
@@ -164,7 +164,7 @@ function createTopbar() {
         <div class="breadcrumb">
 
             <span>
-                Secure Custody
+                Secure Question Paper
             </span>
 
             <b>/</b>
@@ -306,7 +306,7 @@ function updatePageTitle() {
     }
 
     document.title =
-        `${currentPage.title} | Secure Custody`;
+        `${currentPage.title} | Secure Question Paper`;
 }
 
 function initializeNavigation() {

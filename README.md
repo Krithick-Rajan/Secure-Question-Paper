@@ -299,3 +299,27 @@ git status --short
 ## License
 
 This project is currently licensed under the ISC license from `package.json`.
+
+## Deploy to Vercel
+
+This repository deploys as a Node.js serverless application. Vercel sends all
+requests to `api/index.js`, which exports the same Express app used for local
+development. The `frontend/` directory is included in the serverless bundle.
+
+1. Import this GitHub repository into Vercel.
+2. In **Project Settings → Environment Variables**, add the following values
+   to each environment that should run the app:
+
+   ```text
+   FIREBASE_SERVICE_ACCOUNT_JSON=<complete Firebase service-account JSON on one line>
+   VDF_ITERATIONS=120000
+   ```
+
+   Alternatively, set `FIREBASE_SERVICE_ACCOUNT_BASE64` to a base64-encoded
+   service-account JSON value.
+3. Use `npm run build` as the Build Command when Vercel prompts for one.
+4. Deploy and verify `https://<your-domain>/api/health`.
+
+The service-account file is intentionally ignored by Git and is not uploaded to
+Vercel. A deployment without one of the Firebase credential environment
+variables will fail at runtime.

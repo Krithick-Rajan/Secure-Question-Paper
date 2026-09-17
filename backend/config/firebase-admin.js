@@ -1,4 +1,4 @@
-const { initializeApp, cert } = require("firebase-admin/app");
+const { initializeApp, cert, getApps } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
 const { getAuth } = require("firebase-admin/auth");
 const fs = require("fs");
@@ -37,12 +37,14 @@ function loadServiceAccount() {
 const serviceAccount =
     loadServiceAccount();
 
-initializeApp({
-    credential: cert(serviceAccount)
-});
+const firebaseApp =
+    getApps()[0] ||
+    initializeApp({
+        credential: cert(serviceAccount)
+    });
 
-const db = getFirestore();
-const auth = getAuth();
+const db = getFirestore(firebaseApp);
+const auth = getAuth(firebaseApp);
 
 console.log("Firebase Admin SDK connected");
 

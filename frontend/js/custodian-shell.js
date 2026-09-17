@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 function createCustodianSidebar() {
     const sidebar = document.createElement("aside");
@@ -7,7 +7,7 @@ function createCustodianSidebar() {
         <div class="brand">
             <div class="brand-mark"><span></span></div>
             <div class="brand-text">
-                <div class="brand-name">SECURE CUSTODY</div>
+                <div class="brand-name">SECURE QUESTION PAPER</div>
                 <div class="brand-caption">CUSTODIAN PORTAL</div>
             </div>
         </div>
@@ -43,7 +43,7 @@ function initCustodianShell() {
     const topbar = document.createElement("header");
     topbar.className = "topbar";
     topbar.innerHTML = `
-        <div class="breadcrumb"><span>Secure Custody</span><b>/</b><strong>Custodian Portal</strong></div>
+        <div class="breadcrumb"><span>Secure Question Paper</span><b>/</b><strong>Custodian Portal</strong></div>
         <div class="topbar-right">
             <div class="live-status"><span></span>System operational</div>
             <div class="topbar-divider"></div>
