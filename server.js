@@ -5181,20 +5181,6 @@ app.get(
     }
 );
 
-app.use(
-    (req, res) => {
-        res.status(
-            404
-        ).json({
-            success:
-                false,
-
-            message:
-                "Route not found."
-        });
-    }
-);
-
 // ══════════════════════════════════════════════════════════════════════════════
 // USER MANAGEMENT ROUTES (admin only)
 // ══════════════════════════════════════════════════════════════════════════════
@@ -5801,6 +5787,21 @@ function logStartup() {
         "Audit log API enabled"
     );
 }
+
+app.use(
+    (req, res) => {
+        res.status(
+            404
+        ).json({
+            success:
+                false,
+
+            message:
+                "Route not found."
+        });
+    }
+);
+
 
 if (require.main === module) {
     app.listen(
