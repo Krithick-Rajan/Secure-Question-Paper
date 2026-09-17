@@ -77,7 +77,7 @@ app.use(
     express.static(
         path.join(
             __dirname,
-            "frontend"
+            "public"
         )
     )
 );
@@ -88,7 +88,7 @@ app.get(
         res.sendFile(
             path.join(
                 __dirname,
-                "frontend",
+                "public",
                 "login.html"
             )
         );
@@ -1349,7 +1349,7 @@ app.get(
         res.sendFile(
             path.join(
                 __dirname,
-                "frontend",
+                "public",
                 "login.html"
             )
         );

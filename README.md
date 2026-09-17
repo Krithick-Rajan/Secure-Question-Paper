@@ -12,7 +12,7 @@ Secure Question Paper Management System is a Node.js and Firebase based web appl
 - Security release workflow using Shamir sharing, MPC-style release manifests, VDF checks, and canary fragments
 - Audit log dashboard for administrative review
 - Print operator handoff and print confirmation flow
-- Static frontend served directly by the Express backend
+- Static web interface served by Express locally and Vercel CDN in production
 
 ## Tech Stack
 
@@ -39,7 +39,7 @@ secure-question-paper/
 │       ├── release-agent.js
 │       ├── shamir.js
 │       └── vdf.js
-├── frontend/
+├── public/
 │   ├── css/
 │   ├── js/
 │   └── *.html
@@ -50,7 +50,7 @@ secure-question-paper/
 
 ## Modules and Purpose
 
-- `server.js` - main Express server, static frontend hosting, and API route definitions
+- `server.js` - main Express server and API route definitions
 - `backend/config/firebase-admin.js` - Firebase Admin SDK setup for Authentication and Firestore
 - `backend/middleware/auth.js` - verifies Firebase ID tokens from protected API requests
 - `backend/middleware/role.js` - restricts API access based on user roles
@@ -59,9 +59,9 @@ secure-question-paper/
 - `backend/security/vdf.js` - verifiable delay/time-lock release checks
 - `backend/security/canary.js` - canary/decoy fragment creation and validation
 - `backend/security/release-agent.js` - release package, authorization, execution, and print handoff helpers
-- `frontend/*.html` - role-based user interface pages
-- `frontend/js/*.js` - client-side logic for authentication, dashboards, forms, and API calls
-- `frontend/css/*.css` - application styling
+- `public/*.html` - role-based user interface pages
+- `public/js/*.js` - client-side logic for authentication, dashboards, forms, and API calls
+- `public/css/*.css` - application styling
 - `package.json` and `package-lock.json` - Node.js dependency and script definitions
 
 ## Prerequisites
@@ -302,9 +302,9 @@ This project is currently licensed under the ISC license from `package.json`.
 
 ## Deploy to Vercel
 
-This repository deploys as a Node.js serverless application. Vercel sends all
-requests to `api/index.js`, which exports the same Express app used for local
-development. The `frontend/` directory is included in the serverless bundle.
+This repository deploys as a zero-configuration Express application. Vercel
+detects `server.js` automatically, serves `public/` from its CDN, and runs the
+Express API as a serverless function.
 
 1. Import this GitHub repository into Vercel.
 2. In **Project Settings → Environment Variables**, add the following values
