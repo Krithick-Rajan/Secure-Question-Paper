@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print Operator Portal | Secure Custody</title>
+    <link rel="stylesheet" href="/css/design.css">
+</head>
+<body data-page="print-operator">
+
+<div id="page-content">
+
+    <section class="portal-hero">
+        <div class="portal-hero-inner">
+            <div class="eyebrow">PRINT OPERATOR PORTAL</div>
+            <h1>Controlled release terminal</h1>
+            <p>You are the final step in the secure release pipeline. Download the release packet only after the admin executes release. Confirm print to complete the audit trail.</p>
+        </div>
+    </section>
+
+    <section class="portal-body">
+
+        <div id="printAssignmentPanel" class="portal-card">
+            <div class="portal-card-header">
+                <span class="card-label">YOUR ASSIGNMENT</span>
+                <span class="security-module-badge badge-neutral" id="printStatusBadge">LOADING</span>
+            </div>
+            <div id="printAssignmentBody" class="portal-card-body">
+                <div class="portal-loading">Loading your print assignment...</div>
+            </div>
+        </div>
+
+        <div id="printActionPanel" class="portal-card" style="display:none">
+            <div class="portal-card-header">
+                <span class="card-label">RELEASE ACTIONS</span>
+            </div>
+            <div class="portal-card-body">
+
+                <div class="portal-action-row">
+                    <div class="portal-action-info">
+                        <strong>Download release packet</strong>
+                        <span>Encrypted release bundle. Open only on the air-gapped terminal designated for this examination.</span>
+                    </div>
+                    <button class="primary-button" id="downloadPacketButton" type="button" disabled>
+                        <span>Download packet</span>
+                        <b>&#8595;</b>
+                    </button>
+                </div>
+
+                <div id="printDownloadMessage" class="form-message"></div>
+
+                <div class="portal-action-row" id="confirmPrintRow" style="display:none">
+                    <div class="portal-action-info">
+                        <strong>Confirm print executed</strong>
+                        <span>After successfully printing on the air-gapped terminal, confirm here to complete the audit trail.</span>
+                    </div>
+                    <button class="primary-button" id="confirmPrintButton" type="button">
+                        <span>Confirm print</span>
+                        <b>&#10003;</b>
+                    </button>
+                </div>
+
+                <div id="printConfirmMessage" class="form-message"></div>
+
+            </div>
+        </div>
+
+        <div id="printDonePanel" class="portal-card" style="display:none">
+            <div class="portal-card-header">
+                <span class="card-label">PRINT STATUS</span>
+                <span class="security-module-badge badge-pass">PRINT CONFIRMED</span>
+            </div>
+            <div class="portal-card-body">
+                <div class="custody-result custody-success">
+                    <div class="custody-result-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <div>
+                        <strong>Print confirmed and recorded</strong>
+                        <span>The audit trail is complete. This examination has been fully released and printed.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+</div>
+
+<script type="module" src="/js/auth.js"></script>
+<script type="module" src="/js/print-shell.js"></script>
+<script type="module" src="/js/print-operator.js"></script>
+
+</body>
+</html>

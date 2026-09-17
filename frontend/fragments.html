@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Fragments | Secure Custody</title>
+
+    <link
+        rel="stylesheet"
+        href="/css/design.css"
+    >
+
+</head>
+
+<body data-page="fragments">
+
+<div id="page-content">
+
+    <section class="welcome">
+
+        <div>
+
+            <div class="eyebrow">
+                ENCRYPTED CUSTODY
+            </div>
+
+            <h1>
+                Fragments
+            </h1>
+
+            <p>
+                Protect question-paper fragments with authenticated encryption.
+            </p>
+
+        </div>
+
+        <button
+            type="button"
+            class="primary-button create-fragment-button"
+        >
+
+            <span>
+                Add fragment
+            </span>
+
+            <b>
+                +
+            </b>
+
+        </button>
+
+    </section>
+
+
+    <section class="stats">
+
+        <div class="stat">
+
+            <div class="stat-top">
+                <span>PROTECTED</span>
+            </div>
+
+            <div
+                class="stat-number"
+                id="protectedCount"
+            >
+                00
+            </div>
+
+            <div class="stat-bottom">
+                Encrypted fragments
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-top">
+                <span>DECOYS</span>
+            </div>
+
+            <div
+                class="stat-number"
+                id="decoyCount"
+            >
+                00
+            </div>
+
+            <div class="stat-bottom">
+                Canary fragments
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-top">
+                <span>SHARING</span>
+            </div>
+
+            <div class="stat-number">
+                03<span>/05</span>
+            </div>
+
+            <div class="stat-bottom">
+                Configured threshold
+            </div>
+
+        </div>
+
+
+        <div class="stat secure-stat">
+
+            <div class="stat-top">
+
+                <span>
+                    CUSTODY
+                </span>
+
+                <div class="status-pulse"></div>
+
+            </div>
+
+            <div class="stat-number">
+                Locked
+            </div>
+
+            <div class="stat-bottom">
+                Protected storage
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="main-grid">
+
+        <div class="control-card">
+
+            <div class="card-header">
+
+                <div>
+
+                    <span class="card-label">
+                        FRAGMENT REGISTER
+                    </span>
+
+                    <h2 id="fragmentRegisterTitle">
+                        No fragments loaded
+                    </h2>
+
+                </div>
+
+                <span
+                    class="ready-pill"
+                    id="fragmentRegisterStatus"
+                >
+                    Protected
+                </span>
+
+            </div>
+
+
+            <div
+                class="control-empty"
+                id="fragmentEmptyState"
+            >
+
+                <div class="control-symbol">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                    >
+
+                        <rect
+                            x="5"
+                            y="7"
+                            width="14"
+                            height="13"
+                            rx="2"
+                        />
+
+                        <path d="M8 7V4h8v3"/>
+                        <path d="M8 12h8"/>
+                        <path d="M8 16h5"/>
+
+                    </svg>
+
+                </div>
+
+
+                <h3>
+                    No fragments loaded
+                </h3>
+
+                <p>
+                    Add a question fragment to begin protected custody.
+                </p>
+
+
+                <button
+                    type="button"
+                    class="secondary-button create-fragment-button"
+                >
+
+                    Add fragment
+
+                    <span>
+                        →
+                    </span>
+
+                </button>
+
+            </div>
+
+
+            <div
+                class="fragment-list"
+                id="fragmentList"
+                hidden
+            ></div>
+
+        </div>
+
+
+        <div class="security-card">
+
+            <div class="card-header">
+
+                <div>
+
+                    <span class="card-label">
+                        CUSTODY POLICY
+                    </span>
+
+                    <h2>
+                        Fragment protection
+                    </h2>
+
+                </div>
+
+            </div>
+
+
+            <div class="security-values">
+
+                <div class="security-value">
+
+                    <div>
+
+                        <span>
+                            Encryption
+                        </span>
+
+                        <small>
+                            Authenticated encryption
+                        </small>
+
+                    </div>
+
+                    <strong>
+                        AES-256-GCM
+                    </strong>
+
+                </div>
+
+
+                <div class="security-value">
+
+                    <div>
+
+                        <span>
+                            Sharing
+                        </span>
+
+                        <small>
+                            Configured threshold
+                        </small>
+
+                    </div>
+
+                    <strong>
+                        3 OF 5
+                    </strong>
+
+                </div>
+
+
+                <div class="security-value">
+
+                    <div>
+
+                        <span>
+                            Plaintext
+                        </span>
+
+                        <small>
+                            Unencrypted objects
+                        </small>
+
+                    </div>
+
+                    <strong>
+                        NONE
+                    </strong>
+
+                </div>
+
+
+                <div class="security-value last">
+
+                    <div>
+
+                        <span>
+                            Custody
+                        </span>
+
+                        <small>
+                            Current protection state
+                        </small>
+
+                    </div>
+
+                    <strong class="green">
+                        LOCKED
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <footer class="footer">
+
+        <span>
+            SECURE CUSTODY
+        </span>
+
+        <span>
+            AES-256-GCM
+        </span>
+
+        <span>
+            ENCRYPTED
+        </span>
+
+        <span>
+            3 OF 5
+        </span>
+
+    </footer>
+
+</div>
+
+
+<div
+    class="fragment-modal"
+    id="fragmentModal"
+    aria-hidden="true"
+>
+
+    <div
+        class="fragment-modal-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="fragmentModalTitle"
+    >
+
+        <div class="fragment-modal-header">
+
+            <div>
+
+                <span class="card-label">
+                    PROTECTED FRAGMENT
+                </span>
+
+                <h2 id="fragmentModalTitle">
+                    Add question fragment
+                </h2>
+
+                <p>
+                    The fragment will be encrypted before it is stored.
+                </p>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="modal-close"
+                id="closeFragmentModal"
+                aria-label="Close"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="fragmentForm">
+
+            <div class="form-grid">
+
+                <div class="form-field form-field-wide">
+
+                    <label for="fragmentExam">
+                        Examination
+                    </label>
+
+                    <select
+                        id="fragmentExam"
+                        name="examinationId"
+                        required
+                    >
+
+                        <option value="">
+                            Select examination
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-field">
+
+                    <label for="fragmentNumber">
+                        Fragment number
+                    </label>
+
+                    <input
+                        type="number"
+                        id="fragmentNumber"
+                        name="fragmentNumber"
+                        min="1"
+                        max="999"
+                        placeholder="1"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-field">
+
+                    <label for="fragmentLabel">
+                        Fragment label
+                    </label>
+
+                    <input
+                        type="text"
+                        id="fragmentLabel"
+                        name="label"
+                        maxlength="100"
+                        placeholder="Section A"
+                        autocomplete="off"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-field form-field-wide">
+
+                    <label for="fragmentText">
+                        Question fragment
+                    </label>
+
+                    <textarea
+                        id="fragmentText"
+                        name="fragment"
+                        rows="8"
+                        maxlength="10000"
+                        placeholder="Enter the question fragment here..."
+                        required
+                    ></textarea>
+
+                </div>
+
+
+                <div class="form-field form-field-wide">
+
+                    <label class="canary-toggle-label">
+
+                        <input
+                            type="checkbox"
+                            id="fragmentIsDecoy"
+                            name="isDecoy"
+                            class="canary-checkbox"
+                        >
+
+                        <span class="canary-toggle-text">
+
+                            <strong>
+                                Mark as canary / decoy fragment
+                            </strong>
+
+                            <small>
+                                A canary fragment contains a hidden marker.
+                                If this fragment is decrypted outside the
+                                authorized release path, an immediate security
+                                alert is raised and the release is blocked.
+                                The question text above is ignored; the canary
+                                payload replaces it.
+                            </small>
+
+                        </span>
+
+                    </label>
+
+                </div>
+
+            </div>
+
+
+            <div class="fragment-security-note">
+
+                <span class="policy-indicator"></span>
+
+                <div>
+
+                    <strong>
+                        AES-256-GCM protection
+                    </strong>
+
+                    <span>
+                        The question text is encrypted before persistence.
+                        Firestore receives encrypted data, IV and
+                        authentication metadata rather than plaintext.
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="fragmentFormMessage"
+                class="form-message"
+                aria-live="polite"
+            ></div>
+
+
+            <div class="fragment-modal-actions">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    id="cancelFragment"
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                    id="createFragmentSubmit"
+                >
+
+                    <span>
+                        Encrypt & protect
+                    </span>
+
+                    <b>
+                        →
+                    </b>
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<script
+    type="module"
+    src="/js/auth.js"
+></script>
+
+<script
+    type="module"
+    src="/js/shell.js"
+></script>
+
+<script
+    src="/js/spotlight.js"
+></script>
+
+<script
+    type="module"
+    src="/js/fragments.js"
+></script>
+
+</body>
+
+</html>

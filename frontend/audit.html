@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Audit log | Secure Custody</title>
+
+    <link
+        rel="stylesheet"
+        href="/css/design.css"
+    >
+</head>
+
+<body data-page="audit">
+
+    <div id="page-content">
+
+        <section class="welcome">
+
+            <div>
+
+                <div class="eyebrow">
+                    SECURITY HISTORY
+                </div>
+
+                <h1>
+                    Audit log
+                </h1>
+
+                <p>
+                    Review security and administrative activity.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <section class="stats">
+
+            <div class="stat">
+
+                <div class="stat-top">
+                    <span>EVENTS</span>
+                </div>
+
+                <div class="stat-number">
+                    00
+                </div>
+
+                <div class="stat-bottom">
+                    Recorded events
+                </div>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div class="stat-top">
+                    <span>ALERTS</span>
+                </div>
+
+                <div class="stat-number">
+                    00
+                </div>
+
+                <div class="stat-bottom">
+                    Security alerts
+                </div>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div class="stat-top">
+                    <span>ACCESS</span>
+                </div>
+
+                <div class="stat-number">
+                    00
+                </div>
+
+                <div class="stat-bottom">
+                    Recorded access events
+                </div>
+
+            </div>
+
+
+            <div class="stat secure-stat">
+
+                <div class="stat-top">
+
+                    <span>
+                        STATUS
+                    </span>
+
+                    <div class="status-pulse"></div>
+
+                </div>
+
+                <div class="stat-number">
+                    Clear
+                </div>
+
+                <div class="stat-bottom">
+                    No active alerts
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="large-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <div class="panel-title">
+                        Security activity
+                    </div>
+
+                    <div class="panel-subtitle">
+                        Recorded events from the secure custody system.
+                    </div>
+
+                </div>
+
+                <span class="ready-pill">
+                    Clear
+                </span>
+
+            </div>
+
+
+            <div class="panel-body">
+
+                <div class="audit-empty">
+
+                    <div class="control-symbol">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+
+                            <path d="M7 3h8l3 3v15H7z"/>
+
+                            <path d="M15 3v4h4"/>
+
+                            <path d="M10 12h5"/>
+
+                            <path d="M10 16h5"/>
+
+                        </svg>
+
+                    </div>
+
+
+                    <h3>
+                        Loading audit events
+                    </h3>
+
+                    <p>
+                        Reading security activity from Firestore.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <footer class="footer">
+
+            <span>
+                SECURE CUSTODY
+            </span>
+
+            <span>
+                AUDIT
+            </span>
+
+            <span>
+                FIRESTORE
+            </span>
+
+            <span>
+                ADMINISTRATIVE ACCESS
+            </span>
+
+        </footer>
+
+    </div>
+
+
+    <script
+        type="module"
+        src="/js/auth.js"
+    ></script>
+
+    <script
+        src="/js/shell.js"
+    ></script>
+
+    <script
+        src="/js/spotlight.js"
+    ></script>
+
+    <script
+        src="/js/audit.js"
+    ></script>
+
+</body>
+
+</html>

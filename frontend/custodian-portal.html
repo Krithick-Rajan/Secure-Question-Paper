@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custodian Portal | Secure Custody</title>
+    <link rel="stylesheet" href="/css/design.css">
+</head>
+
+<body data-page="custodian">
+
+<div id="page-content">
+
+    <section class="portal-hero">
+        <div class="portal-hero-inner">
+            <div class="eyebrow">CUSTODIAN PORTAL</div>
+            <h1>Your custody share</h1>
+            <p>You hold one of the five Shamir shares required to release this examination. Submit your share only when instructed by the administrator.</p>
+        </div>
+    </section>
+
+    <section class="portal-body">
+
+        <div id="custodianAssignmentPanel" class="portal-card">
+            <div class="portal-card-header">
+                <span class="card-label">YOUR ASSIGNMENT</span>
+                <span class="security-module-badge badge-neutral" id="custodianStatusBadge">LOADING</span>
+            </div>
+            <div id="custodianAssignmentBody" class="portal-card-body">
+                <div class="portal-loading">Loading your custody assignment...</div>
+            </div>
+        </div>
+
+        <div id="custodianSubmitPanel" class="portal-card" style="display:none">
+            <div class="portal-card-header">
+                <span class="card-label">SUBMIT YOUR SHARE</span>
+                <span class="share-count-badge" id="custodianShareCount">0 of 3 submitted</span>
+            </div>
+            <div class="portal-card-body">
+                <p class="submit-share-desc">Paste your custody share value exactly as you received it. Do not modify it in any way.</p>
+                <div class="submit-share-form">
+                    <div class="form-field form-field-wide">
+                        <label for="custodianShareValue">Your share value (Share #<span id="custodianShareNumLabel">?</span>)</label>
+                        <textarea id="custodianShareValue" rows="5" placeholder="Paste your hex share value here..."></textarea>
+                    </div>
+                    <div id="custodianSubmitMessage" class="form-message"></div>
+                    <button class="primary-button" id="custodianSubmitButton" type="button">
+                        <span>Submit my share</span>
+                        <b>&#x2192;</b>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="custodianDonePanel" class="portal-card" style="display:none">
+            <div class="portal-card-header">
+                <span class="card-label">SHARE STATUS</span>
+                <span class="security-module-badge badge-pass">SUBMITTED</span>
+            </div>
+            <div class="portal-card-body">
+                <div class="custody-result custody-success">
+                    <div class="custody-result-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <div>
+                        <strong>Share submitted successfully</strong>
+                        <span>Your custody share has been received. The administrator will proceed with release once the threshold is met.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+</div>
+
+<script type="module" src="/js/auth.js"></script>
+<script type="module" src="/js/custodian-shell.js"></script>
+<script type="module" src="/js/custodian-portal.js"></script>
+
+</body>
+</html>

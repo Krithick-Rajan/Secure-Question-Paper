@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Examinations | Secure Custody</title>
+
+    <link
+        rel="stylesheet"
+        href="/css/design.css"
+    >
+
+</head>
+
+<body data-page="exams">
+
+<div id="page-content">
+
+    <section class="welcome">
+
+        <div>
+
+            <div class="eyebrow">
+                EXAMINATION MANAGEMENT
+            </div>
+
+            <h1>
+                Examinations
+            </h1>
+
+            <p>
+                Create and manage protected examination releases.
+            </p>
+
+        </div>
+
+        <button
+            type="button"
+            class="primary-button create-examination-button"
+        >
+
+            <span>
+                Create examination
+            </span>
+
+            <b>
+                +
+            </b>
+
+        </button>
+
+    </section>
+
+
+    <section class="stats">
+
+        <div class="stat">
+
+            <div class="stat-top">
+                <span>REGISTERED</span>
+            </div>
+
+            <div
+                class="stat-number"
+                id="registeredCount"
+            >
+                00
+            </div>
+
+            <div class="stat-bottom">
+                Examination records
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-top">
+                <span>ACTIVE</span>
+            </div>
+
+            <div
+                class="stat-number"
+                id="activeCount"
+            >
+                00
+            </div>
+
+            <div class="stat-bottom">
+                Currently active
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-top">
+                <span>THRESHOLD</span>
+            </div>
+
+            <div class="stat-number">
+                03<span>/05</span>
+            </div>
+
+            <div class="stat-bottom">
+                Custodian shares
+            </div>
+
+        </div>
+
+
+        <div class="stat secure-stat">
+
+            <div class="stat-top">
+
+                <span>
+                    RELEASE
+                </span>
+
+                <div class="status-pulse"></div>
+
+            </div>
+
+            <div class="stat-number">
+                Offline
+            </div>
+
+            <div class="stat-bottom">
+                Controlled output
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="main-grid">
+
+        <div class="control-card">
+
+            <div class="card-header">
+
+                <div>
+
+                    <span class="card-label">
+                        EXAMINATION REGISTER
+                    </span>
+
+                    <h2 id="registerTitle">
+                        No examinations configured
+                    </h2>
+
+                </div>
+
+                <span
+                    class="ready-pill"
+                    id="registerStatus"
+                >
+                    Ready
+                </span>
+
+            </div>
+
+
+            <div
+                class="control-empty"
+                id="examEmptyState"
+            >
+
+                <div class="control-symbol">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                    >
+
+                        <rect
+                            x="6"
+                            y="3"
+                            width="12"
+                            height="18"
+                            rx="2"
+                        />
+
+                        <path d="M9 7h6"/>
+                        <path d="M9 11h6"/>
+                        <path d="M9 15h4"/>
+
+                    </svg>
+
+                </div>
+
+
+                <h3>
+                    No examinations configured
+                </h3>
+
+                <p>
+                    Create an examination to begin protected custody.
+                </p>
+
+
+                <button
+                    type="button"
+                    class="secondary-button create-examination-button"
+                >
+
+                    Create examination
+
+                    <span>
+                        →
+                    </span>
+
+                </button>
+
+            </div>
+
+
+            <div
+                class="exam-list"
+                id="examList"
+                hidden
+            ></div>
+
+        </div>
+
+
+        <div class="security-card">
+
+            <div class="card-header">
+
+                <div>
+
+                    <span class="card-label">
+                        RELEASE POLICY
+                    </span>
+
+                    <h2>
+                        Protection rules
+                    </h2>
+
+                </div>
+
+            </div>
+
+
+            <div class="security-values">
+
+                <div class="security-value">
+
+                    <div>
+
+                        <span>
+                            Threshold
+                        </span>
+
+                        <small>
+                            Custodian shares required
+                        </small>
+
+                    </div>
+
+                    <strong>
+                        3 OF 5
+                    </strong>
+
+                </div>
+
+
+                <div class="security-value">
+
+                    <div>
+
+                        <span>
+                            Time gate
+                        </span>
+
+                        <small>
+                            Release condition
+                        </small>
+
+                    </div>
+
+                    <strong>
+                        ARMED
+                    </strong>
+
+                </div>
+
+
+                <div class="security-value">
+
+                    <div>
+
+                        <span>
+                            Release
+                        </span>
+
+                        <small>
+                            Controlled output path
+                        </small>
+
+                    </div>
+
+                    <strong class="green">
+                        OFFLINE
+                    </strong>
+
+                </div>
+
+
+                <div class="security-value last">
+
+                    <div>
+
+                        <span>
+                            Status
+                        </span>
+
+                        <small>
+                            System configuration
+                        </small>
+
+                    </div>
+
+                    <strong class="green">
+                        READY
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <footer class="footer">
+
+        <span>
+            SECURE CUSTODY
+        </span>
+
+        <span>
+            AES-256-GCM
+        </span>
+
+        <span>
+            FIRESTORE
+        </span>
+
+        <span>
+            3 OF 5
+        </span>
+
+    </footer>
+
+</div>
+
+
+<div
+    class="exam-modal"
+    id="examModal"
+    aria-hidden="true"
+>
+
+    <div
+        class="exam-modal-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="examModalTitle"
+    >
+
+        <div class="exam-modal-header">
+
+            <div>
+
+                <span class="card-label">
+                    PROTECTED EXAMINATION
+                </span>
+
+                <h2 id="examModalTitle">
+                    Create examination
+                </h2>
+
+                <p>
+                    Register an examination and configure its controlled release time.
+                </p>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="modal-close"
+                id="closeExamModal"
+                aria-label="Close"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="examForm">
+
+            <div class="form-grid">
+
+                <div class="form-field form-field-wide">
+
+                    <label for="examName">
+                        Examination name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="examName"
+                        name="name"
+                        placeholder="Example: Data Structures End Semester Examination"
+                        autocomplete="off"
+                        maxlength="150"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-field">
+
+                    <label for="examCode">
+                        Examination code
+                    </label>
+
+                    <input
+                        type="text"
+                        id="examCode"
+                        name="code"
+                        placeholder="DS-2026-01"
+                        maxlength="30"
+                        autocomplete="off"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-field">
+
+                    <label for="examSubject">
+                        Subject
+                    </label>
+
+                    <input
+                        type="text"
+                        id="examSubject"
+                        name="subject"
+                        placeholder="Data Structures"
+                        maxlength="100"
+                        autocomplete="off"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-field">
+
+                    <label for="examDate">
+                        Examination date
+                    </label>
+
+                    <input
+                        type="date"
+                        id="examDate"
+                        name="examDate"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-field">
+
+                    <label for="examTime">
+                        Examination start time
+                    </label>
+
+                    <input
+                        type="time"
+                        id="examTime"
+                        name="startTime"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-field">
+
+                    <label for="releaseTime">
+                        Secure release time
+                    </label>
+
+                    <input
+                        type="time"
+                        id="releaseTime"
+                        name="releaseTime"
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div class="exam-policy-note">
+
+                <span class="policy-indicator"></span>
+
+                <div>
+
+                    <strong>
+                        Release remains locked until the configured time
+                    </strong>
+
+                    <span>
+                        The question fragments remain encrypted and protected
+                        by 3-of-5 threshold custody. Release authorization is
+                        permitted only after the secure release time is reached.
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="examFormMessage"
+                class="form-message"
+                aria-live="polite"
+            ></div>
+
+
+            <div class="exam-modal-actions">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    id="cancelExam"
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                    id="createExamSubmit"
+                >
+
+                    <span>
+                        Create examination
+                    </span>
+
+                    <b>
+                        →
+                    </b>
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<script
+    type="module"
+    src="/js/auth.js"
+></script>
+
+<script
+    type="module"
+    src="/js/shell.js"
+></script>
+
+<script
+    src="/js/spotlight.js"
+></script>
+
+<script
+    type="module"
+    src="/js/exams.js"
+></script>
+
+</body>
+
+</html>

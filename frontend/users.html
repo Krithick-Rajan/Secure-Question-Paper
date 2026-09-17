@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users | Secure Custody</title>
+    <link rel="stylesheet" href="/css/design.css">
+</head>
+<body data-page="users">
+
+<div id="page-content">
+
+    <section class="welcome">
+        <div>
+            <div class="eyebrow">USER MANAGEMENT</div>
+            <h1>System users</h1>
+            <p>Create and manage setter, custodian, and print operator accounts. Assign each actor to their examination.</p>
+        </div>
+    </section>
+
+
+    <div class="portal-card">
+        <div class="portal-card-header">
+            <span class="card-label">CREATE NEW USER</span>
+        </div>
+        <div class="portal-card-body">
+            <div class="users-create-grid">
+
+                <div class="form-field">
+                    <label for="newUserEmail">Email address</label>
+                    <input type="email" id="newUserEmail" placeholder="setter@exam.com">
+                </div>
+
+                <div class="form-field">
+                    <label for="newUserPassword">Temporary password</label>
+                    <input type="password" id="newUserPassword" placeholder="Min 6 characters">
+                </div>
+
+                <div class="form-field">
+                    <label for="newUserDisplayName">Display name</label>
+                    <input type="text" id="newUserDisplayName" placeholder="e.g. Dr. Ramesh Kumar">
+                </div>
+
+                <div class="form-field">
+                    <label for="newUserRole">Role</label>
+                    <select id="newUserRole">
+                        <option value="setter">Question Setter</option>
+                        <option value="custodian">Custodian</option>
+                        <option value="print-operator">Print Operator</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div id="createUserMessage" class="form-message"></div>
+
+            <button class="primary-button" id="createUserButton" type="button">
+                <span>Create user</span>
+                <b>+</b>
+            </button>
+        </div>
+    </div>
+
+
+    <div class="portal-card">
+        <div class="portal-card-header">
+            <span class="card-label">ALL USERS</span>
+            <button class="share-download-btn" id="refreshUsersButton" type="button">&#8635; Refresh</button>
+        </div>
+        <div id="usersListBody" class="portal-card-body">
+            <div class="portal-loading">Loading users...</div>
+        </div>
+    </div>
+
+
+    <div class="portal-card" id="assignPanel">
+        <div class="portal-card-header">
+            <span class="card-label">ASSIGN USER TO EXAMINATION</span>
+        </div>
+        <div class="portal-card-body">
+
+            <div class="users-create-grid">
+
+                <div class="form-field">
+                    <label for="assignExamSelect">Examination</label>
+                    <select id="assignExamSelect"><option value="">Loading...</option></select>
+                </div>
+
+                <div class="form-field">
+                    <label for="assignUserSelect">User</label>
+                    <select id="assignUserSelect"><option value="">Select user first</option></select>
+                </div>
+
+                <div class="form-field" id="shareNumberField" style="display:none">
+                    <label for="assignShareNumber">Share number (custodians only)</label>
+                    <select id="assignShareNumber">
+                        <option value="1">Share 1</option>
+                        <option value="2">Share 2</option>
+                        <option value="3">Share 3</option>
+                        <option value="4">Share 4</option>
+                        <option value="5">Share 5</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div id="assignMessage" class="form-message"></div>
+
+            <button class="primary-button" id="assignButton" type="button">
+                <span>Assign to exam</span>
+                <b>&#8594;</b>
+            </button>
+        </div>
+    </div>
+
+</div>
+
+
+<script type="module" src="/js/auth.js"></script>
+<script type="module" src="/js/shell.js"></script>
+<script type="module" src="/js/users.js"></script>
+
+</body>
+</html>

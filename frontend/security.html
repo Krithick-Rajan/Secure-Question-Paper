@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Security | Secure Custody</title>
+
+    <link
+        rel="stylesheet"
+        href="/css/design.css"
+    >
+
+</head>
+
+
+<body data-page="security">
+
+
+<div id="page-content">
+
+    <section class="welcome">
+
+        <div>
+
+            <div class="eyebrow">
+                SECURITY CONTROL
+            </div>
+
+            <h1>
+                Security
+            </h1>
+
+            <p>
+                Live cryptographic security status for each examination.
+                Monitor MPC verification, VDF time-lock, canary detection
+                and threshold custody in real time.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <section class="stats">
+
+        <div class="stat secure-stat">
+
+            <div class="stat-top">
+
+                <span>
+                    AUTHENTICATION
+                </span>
+
+                <div class="status-pulse"></div>
+
+            </div>
+
+            <div class="stat-number">
+                Secure
+            </div>
+
+            <div class="stat-bottom">
+                Firebase Authentication
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-top">
+                <span>AUTHORIZATION</span>
+            </div>
+
+            <div class="stat-number">
+                RBAC
+            </div>
+
+            <div class="stat-bottom">
+                Administrator enforcement
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-top">
+                <span>ENCRYPTION</span>
+            </div>
+
+            <div class="stat-number">
+                AES<span>256</span>
+            </div>
+
+            <div class="stat-bottom">
+                Authenticated encryption
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-top">
+                <span>CANARY</span>
+            </div>
+
+            <div class="stat-number">
+                Active
+            </div>
+
+            <div class="stat-bottom">
+                Decoy fragment detection
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="main-grid security-live-section">
+
+        <div class="control-card security-live-container">
+
+            <div class="card-header">
+
+                <div>
+
+                    <span class="card-label">
+                        LIVE SECURITY STATUS
+                    </span>
+
+                    <h2>
+                        Cryptographic security monitor
+                    </h2>
+
+                </div>
+
+                <span class="ready-pill">
+                    Live
+                </span>
+
+            </div>
+
+
+            <div
+                class="panel-body"
+                id="security-live-panel"
+            >
+
+                <div class="control-empty">
+
+                    <div class="control-symbol">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+
+                            <path
+                                d="M12 3l8 3v6c0 4.7-3.1 7.7-8 9-4.9-1.3-8-4.3-8-9V6l8-3z"
+                            />
+
+                            <path d="M9 12l2 2 4-4"/>
+
+                        </svg>
+
+                    </div>
+
+
+                    <h3>
+                        Loading security status
+                    </h3>
+
+                    <p>
+                        Initializing the security monitor...
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="security-card">
+
+            <div class="card-header">
+
+                <div>
+
+                    <span class="card-label">
+                        SECURITY CONFIGURATION
+                    </span>
+
+                    <h2>
+                        Protection controls
+                    </h2>
+
+                </div>
+
+
+                <div class="shield-small">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                    >
+
+                        <path
+                            d="M12 3l8 3v6c0 4.7-3.1 7.7-8 9-4.9-1.3-8-4.3-8-9V6l8-3z"
+                        />
+
+                        <path d="M9 12l2 2 4-4"/>
+
+                    </svg>
+
+                </div>
+
+            </div>
+
+
+            <div class="security-values">
+
+                <div class="security-value">
+
+                    <div>
+
+                        <span>
+                            Identity
+                        </span>
+
+                        <small>
+                            Firebase Authentication
+                        </small>
+
+                    </div>
+
+                    <strong class="green">
+                        ACTIVE
+                    </strong>
+
+                </div>
+
+
+                <div class="security-value">
+
+                    <div>
+
+                        <span>
+                            Authorization
+                        </span>
+
+                        <small>
+                            Role-based access control
+                        </small>
+
+                    </div>
+
+                    <strong>
+                        RBAC
+                    </strong>
+
+                </div>
+
+
+                <div class="security-value">
+
+                    <div>
+
+                        <span>
+                            Fragment encryption
+                        </span>
+
+                        <small>
+                            Authenticated encryption
+                        </small>
+
+                    </div>
+
+                    <strong>
+                        AES-256-GCM
+                    </strong>
+
+                </div>
+
+
+                <div class="security-value">
+
+                    <div>
+
+                        <span>
+                            Secret sharing
+                        </span>
+
+                        <small>
+                            Threshold custody
+                        </small>
+
+                    </div>
+
+                    <strong>
+                        SHAMIR 3-OF-5
+                    </strong>
+
+                </div>
+
+
+                <div class="security-value">
+
+                    <div>
+
+                        <span>
+                            MPC assembly
+                        </span>
+
+                        <small>
+                            Encrypted manifest
+                        </small>
+
+                    </div>
+
+                    <strong>
+                        ADDITIVE MPC
+                    </strong>
+
+                </div>
+
+
+                <div class="security-value">
+
+                    <div>
+
+                        <span>
+                            Time-lock
+                        </span>
+
+                        <small>
+                            Release gate
+                        </small>
+
+                    </div>
+
+                    <strong>
+                        VDF SHA-256
+                    </strong>
+
+                </div>
+
+
+                <div class="security-value last">
+
+                    <div>
+
+                        <span>
+                            Canary detection
+                        </span>
+
+                        <small>
+                            Decoy fragment tripwire
+                        </small>
+
+                    </div>
+
+                    <strong class="green">
+                        ACTIVE
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <footer class="footer">
+
+        <span>SECURE CUSTODY</span>
+        <span>FIREBASE AUTH</span>
+        <span>RBAC</span>
+        <span>AES-256-GCM</span>
+        <span>MPC</span>
+        <span>VDF</span>
+        <span>CANARY</span>
+
+    </footer>
+
+</div>
+
+
+<script type="module" src="/js/auth.js"></script>
+<script type="module" src="/js/shell.js"></script>
+<script src="/js/spotlight.js"></script>
+<script src="/js/security.js"></script>
+
+</body>
+
+</html>

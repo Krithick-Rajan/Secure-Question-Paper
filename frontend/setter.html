@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setter Portal | Secure Custody</title>
+    <link rel="stylesheet" href="/css/design.css">
+</head>
+
+<body data-page="setter">
+
+<div id="page-content">
+
+    <section class="portal-hero">
+
+        <div class="portal-hero-inner">
+
+            <div class="eyebrow">QUESTION SETTER PORTAL</div>
+
+            <h1>Upload question fragments</h1>
+
+            <p>
+                Each fragment is encrypted with AES-256-GCM before transmission.
+                You never upload a complete paper — only individual encrypted fragments.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <section class="portal-body">
+
+
+        <div id="setterExamPanel" class="portal-card">
+
+            <div class="portal-card-header">
+                <span class="card-label">YOUR ASSIGNED EXAMINATIONS</span>
+            </div>
+
+            <div id="setterExamList" class="portal-card-body">
+                <div class="portal-loading">Loading assignments...</div>
+            </div>
+
+        </div>
+
+
+        <div id="setterUploadPanel" class="portal-card" style="display:none">
+
+            <div class="portal-card-header">
+                <span class="card-label" id="setterUploadLabel">UPLOAD FRAGMENT</span>
+                <span class="security-module-badge badge-neutral" id="setterUploadBadge">SELECT EXAM</span>
+            </div>
+
+            <div class="portal-card-body">
+
+                <div class="form-field">
+                    <label for="setterFragmentTitle">Fragment title</label>
+                    <input
+                        type="text"
+                        id="setterFragmentTitle"
+                        placeholder="e.g. Section A — Question 3"
+                    >
+                </div>
+
+                <div class="form-field form-field-wide">
+                    <label for="setterFragmentContent">
+                        Question content (plaintext — encrypted before upload)
+                    </label>
+                    <textarea
+                        id="setterFragmentContent"
+                        rows="8"
+                        placeholder="Write the question here. This text will be AES-256-GCM encrypted before leaving your session."
+                    ></textarea>
+                </div>
+
+                <div id="setterUploadMessage" class="form-message"></div>
+
+                <button
+                    class="primary-button"
+                    id="setterUploadButton"
+                    type="button"
+                >
+                    <span>Encrypt and upload fragment</span>
+                    <b>&#8593;</b>
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div id="setterFragmentHistory" class="portal-card" style="display:none">
+
+            <div class="portal-card-header">
+                <span class="card-label">MY UPLOADED FRAGMENTS</span>
+                <span id="setterFragmentCount" class="share-count-badge">0 fragments</span>
+            </div>
+
+            <div id="setterFragmentList" class="portal-card-body">
+            </div>
+
+        </div>
+
+
+    </section>
+
+</div>
+
+
+<script type="module" src="/js/auth.js"></script>
+<script type="module" src="/js/setter-shell.js"></script>
+<script type="module" src="/js/setter.js"></script>
+
+</body>
+</html>
