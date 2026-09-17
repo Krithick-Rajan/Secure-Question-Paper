@@ -48,6 +48,22 @@ secure-question-paper/
 └── README.md
 ```
 
+## Modules and Purpose
+
+- `server.js` - main Express server, static frontend hosting, and API route definitions
+- `backend/config/firebase-admin.js` - Firebase Admin SDK setup for Authentication and Firestore
+- `backend/middleware/auth.js` - verifies Firebase ID tokens from protected API requests
+- `backend/middleware/role.js` - restricts API access based on user roles
+- `backend/security/shamir.js` - secret sharing logic for splitting and reconstructing protected values
+- `backend/security/mpc.js` - encrypted release manifest and MPC-style release computation helpers
+- `backend/security/vdf.js` - verifiable delay/time-lock release checks
+- `backend/security/canary.js` - canary/decoy fragment creation and validation
+- `backend/security/release-agent.js` - release package, authorization, execution, and print handoff helpers
+- `frontend/*.html` - role-based user interface pages
+- `frontend/js/*.js` - client-side logic for authentication, dashboards, forms, and API calls
+- `frontend/css/*.css` - application styling
+- `package.json` and `package-lock.json` - Node.js dependency and script definitions
+
 ## Prerequisites
 
 - Node.js 18 or later
@@ -132,6 +148,118 @@ Most API routes require a Firebase ID token in the `Authorization` header:
 ```text
 Authorization: Bearer <firebase-id-token>
 ```
+
+## Sample Input and Output
+
+### Sample 1: Health Check
+
+Request:
+
+```http
+GET /api/health
+```
+
+Sample output:
+
+```json
+{
+  "success": true,
+  "service": "Secure Question Paper Backend",
+  "status": "operational",
+  "security": {
+    "aes": "AES-256-GCM",
+    "custody": "Shamir 3-of-5",
+    "mpc": "Software MPC encrypted manifest",
+    "vdf": "Sequential SHA-256 VDF prototype",
+    "canary": "Enabled",
+    "releaseAgent": "Enabled"
+  }
+}
+```
+
+### Sample 2: Create Examination
+
+Request:
+
+```http
+POST /api/examinations
+Authorization: Bearer <firebase-id-token>
+Content-Type: application/json
+```
+
+Sample input:
+
+```json
+{
+  "code": "CS-2026-001",
+  "name": "Model Competitive Exam",
+  "subject": "Computer Science",
+  "examDate": "2026-10-15",
+  "startTime": "10:00",
+  "releaseTime": "2026-10-15T09:00:00.000Z"
+}
+```
+
+Sample output:
+
+```json
+{
+  "success": true,
+  "message": "Examination created successfully.",
+  "examination": {
+    "id": "generated-firestore-document-id",
+    "code": "CS-2026-001",
+    "title": "Model Competitive Exam",
+    "subject": "Computer Science",
+    "examDate": "2026-10-15",
+    "startTime": "10:00",
+    "custodyStatus": "uninitialized"
+  }
+}
+```
+
+### Sample 3: Submit Question Paper Fragment
+
+Request:
+
+```http
+POST /api/fragments
+Authorization: Bearer <firebase-id-token>
+Content-Type: application/json
+```
+
+Sample input:
+
+```json
+{
+  "examinationId": "generated-firestore-document-id",
+  "fragmentNumber": 1,
+  "fragmentLabel": "Section A",
+  "questionText": "1. Define operating system. 2. Explain process scheduling."
+}
+```
+
+Sample output:
+
+```json
+{
+  "success": true,
+  "message": "Fragment encrypted and protected successfully.",
+  "fragment": {
+    "id": "generated-fragment-id",
+    "examinationId": "generated-firestore-document-id",
+    "fragmentNumber": 1,
+    "fragmentLabel": "Section A",
+    "encrypted": true,
+    "status": "encrypted",
+    "encryptionAlgorithm": "AES-256-GCM"
+  }
+}
+```
+
+## Database
+
+This project uses Firebase Cloud Firestore as its database. No local database file is required in the repository. Runtime credentials are provided through the private `firebase-service-account.json` file, which must not be committed to GitHub.
 
 ## GitHub Push Guide
 
