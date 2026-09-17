@@ -30,6 +30,53 @@ const auth =
 window.firebaseAuth = auth;
 
 
+const ADMIN_PAGES =
+    new Set([
+        "overview",
+        "exams",
+        "fragments",
+        "custodians",
+        "release",
+        "security",
+        "audit",
+        "users"
+    ]);
+
+
+const PAGE_ROLES = {
+    setter: "setter",
+    custodian: "custodian",
+    "print-operator": "print-operator"
+};
+
+
+const ROLE_REDIRECTS = {
+    admin: "/overview.html",
+    setter: "/setter.html",
+    custodian: "/custodian-portal.html",
+    "print-operator": "/print-operator.html"
+};
+
+
+function getRequiredRole() {
+    const page =
+        document.body?.dataset?.page || "";
+
+    if (
+        ADMIN_PAGES.has(page)
+    ) {
+        return "admin";
+    }
+
+    return PAGE_ROLES[page] || null;
+}
+
+
+function getRoleDestination(role) {
+    return ROLE_REDIRECTS[role] || "/";
+}
+
+
 let resolveAuthReady;
 
 window.authReady =
@@ -56,6 +103,9 @@ onAuthStateChanged(
 
 
         try {
+            const requiredRole =
+                getRequiredRole();
+
 
             const token =
                 await user.getIdToken();
@@ -76,10 +126,9 @@ onAuthStateChanged(
 
 
             if (!response.ok) {
-
                 resolveAuthReady({
                     authenticated: false,
-                    admin: false
+                    authorized: false
                 });
 
                 await signOut(auth);
@@ -96,13 +145,12 @@ onAuthStateChanged(
 
             if (
                 !result.success ||
-                !result.user ||
-                result.user.role !== "admin"
+                !result.user
             ) {
 
                 resolveAuthReady({
                     authenticated: false,
-                    admin: false
+                    authorized: false
                 });
 
                 await signOut(auth);
@@ -113,13 +161,44 @@ onAuthStateChanged(
             }
 
 
-            window.currentAdmin =
+            const role =
+                result.user.role;
+
+
+            if (
+                requiredRole &&
+                role !== requiredRole
+            ) {
+
+                resolveAuthReady({
+                    authenticated: true,
+                    authorized: false,
+                    user: result.user
+                });
+
+                window.location.href =
+                    getRoleDestination(role);
+
+                return;
+            }
+
+
+            window.currentUserProfile =
                 result.user;
+
+
+            if (
+                role === "admin"
+            ) {
+                window.currentAdmin =
+                    result.user;
+            }
 
 
             resolveAuthReady({
                 authenticated: true,
-                admin: true,
+                authorized: true,
+                admin: role === "admin",
                 user: result.user
             });
 

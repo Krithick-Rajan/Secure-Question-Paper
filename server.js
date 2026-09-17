@@ -82,6 +82,19 @@ app.use(
     )
 );
 
+app.get(
+    "/",
+    (_req, res) => {
+        res.sendFile(
+            path.join(
+                __dirname,
+                "frontend",
+                "login.html"
+            )
+        );
+    }
+);
+
 function createFingerprint(value) {
     return crypto
         .createHash("sha256")
@@ -1430,6 +1443,29 @@ app.get(
 
             message:
                 "Authorization successful.",
+
+            user: {
+                uid:
+                    req.user.uid,
+
+                email:
+                    req.user.email,
+
+                role:
+                    req.user.role
+            }
+        });
+    }
+);
+
+app.get(
+    "/api/me",
+    verifyToken,
+    requireRole("admin", "setter", "custodian", "print-operator"),
+    (req, res) => {
+        res.json({
+            success:
+                true,
 
             user: {
                 uid:
@@ -5728,43 +5764,49 @@ app.post(
     }
 );
 
-app.listen(
-    PORT,
-    () => {
-        console.log(
-            `Server running at http://localhost:${PORT}`
-        );
+function logStartup() {
+    console.log(
+        `Server running at http://localhost:${PORT}`
+    );
 
-        console.log(
-            "Firebase Admin SDK connected"
-        );
+    console.log(
+        "Firebase Admin SDK connected"
+    );
 
-        console.log(
-            "Shamir 3-of-5 threshold custody enabled"
-        );
+    console.log(
+        "Shamir 3-of-5 threshold custody enabled"
+    );
 
-        console.log(
-            "AES-256-GCM fragment encryption uses examination custody keys"
-        );
+    console.log(
+        "AES-256-GCM fragment encryption uses examination custody keys"
+    );
 
-        console.log(
-            "Software MPC encrypted-manifest computation enabled"
-        );
+    console.log(
+        "Software MPC encrypted-manifest computation enabled"
+    );
 
-        console.log(
-            "Sequential SHA-256 VDF release gate enabled"
-        );
+    console.log(
+        "Sequential SHA-256 VDF release gate enabled"
+    );
 
-        console.log(
-            "Canary/decoy detection enabled"
-        );
+    console.log(
+        "Canary/decoy detection enabled"
+    );
 
-        console.log(
-            "Controlled offline release-agent simulation enabled"
-        );
+    console.log(
+        "Controlled offline release-agent simulation enabled"
+    );
 
-        console.log(
-            "Audit log API enabled"
-        );
-    }
-);
+    console.log(
+        "Audit log API enabled"
+    );
+}
+
+if (require.main === module) {
+    app.listen(
+        PORT,
+        logStartup
+    );
+}
+
+module.exports = app;
