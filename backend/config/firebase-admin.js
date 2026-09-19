@@ -4,6 +4,13 @@ const { getAuth } = require("firebase-admin/auth");
 const fs = require("fs");
 const path = require("path");
 
+const invalidLoopbackProxy = /^https?:\/\/(?:127\.0\.0\.1|localhost):9\/?$/i;
+for (const variable of ["ALL_PROXY", "HTTP_PROXY", "HTTPS_PROXY", "all_proxy", "http_proxy", "https_proxy"]) {
+    if (invalidLoopbackProxy.test(process.env[variable] || "")) {
+        delete process.env[variable];
+    }
+}
+
 function loadServiceAccount() {
     if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
         return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);

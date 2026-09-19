@@ -128,6 +128,13 @@ async function handleDownloadPacket() {
         a.click();
         URL.revokeObjectURL(url);
 
+        const preview = document.getElementById("releasedPaperPreview");
+        const previewContent = document.getElementById("releasedPaperContent");
+        if (preview && previewContent) {
+            previewContent.textContent = packet?.assembledPaper || content;
+            preview.style.display = "";
+        }
+
         if (msgEl) { msgEl.textContent = "\u2713 Release packet downloaded. Transfer to air-gapped terminal."; msgEl.className = "form-message success"; }
         if (btn) { btn.querySelector("span").textContent = "Download packet"; }
 

@@ -1217,7 +1217,12 @@ app.get("/api/release/status/:examinationId", verifyToken, requireRole("admin"),
         const custodyVerified = data.custodyStatus === "initialized";
         const fragmentsReady = fragments.length > 0 && fragmentState.plaintext === 0 && fragmentState.encrypted === fragments.length;
         const mpcVerified = data.security?.mpc?.status === "verified";
-        const vdfVerified = data.security?.vdf?.status === "verified";
+        const vdfState = await verifyVdfState(
+            data,
+            examinationId,
+            data.security?.mpc?.manifestHash || ""
+        );
+        const vdfVerified = vdfState.verified === true;
         const canaryClear = data.security?.canaryStatus !== "TRIGGERED";
         const timeGateOpen = releaseTime ? isReleaseTimeReached(releaseTime) : false;
 
