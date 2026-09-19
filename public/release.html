@@ -4,14 +4,171 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Release | Secure Question Paper</title>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js">
     <link rel="stylesheet" href="/css/design.css">
 </head>
 <body data-page="release">
-    <div id="page-content"></div>
+    <div id="page-content">
+        <div class="page">
+            <section class="page-intro">
+                <div>
+                    <div class="eyebrow">CONTROLLED RELEASE</div>
+                    <h1>Secure Release</h1>
+                    <p>Release protected examination fragments only after the configured time gate and threshold custody requirements are satisfied.</p>
+                </div>
+            </section>
+
+            <section class="large-panel release-panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="eyebrow">RELEASE CONTROL</div>
+                        <h2>Time-gated examination release</h2>
+                        <p>The protected question paper remains encrypted until the controlled release process is authorized.</p>
+                    </div>
+                    <div class="release-state" id="releaseState">
+                        <span class="state-dot"></span>
+                        <span id="releaseStateText">LOCKED</span>
+                    </div>
+                </div>
+
+                <div class="panel-body release-panel-content">
+                    <div class="release-examination">
+                        <label for="releaseExamination">Examination</label>
+                        <select id="releaseExamination">
+                            <option value="">Select examination</option>
+                        </select>
+                    </div>
+
+                    <div id="releaseResult"></div>
+
+                    <div class="release-details">
+                        <div class="release-time-card">
+                            <div class="release-label">RELEASE TIME</div>
+                            <div class="release-value" id="releaseTime">NOT CONFIGURED</div>
+                        </div>
+                        <div class="release-time-card">
+                            <div class="release-label">CURRENT TIME</div>
+                            <div class="release-value" id="currentTime">—</div>
+                        </div>
+                        <div class="release-time-card">
+                            <div class="release-label">TIME GATE</div>
+                            <div class="release-value" id="timeGate">LOCKED</div>
+                        </div>
+                    </div>
+
+                    <div class="release-security-grid">
+                        <div class="release-security-item">
+                            <span class="security-label">THRESHOLD CUSTODY</span>
+                            <strong id="custodyStatus">CHECKING</strong>
+                            <small>3 of 5 required</small>
+                        </div>
+                        <div class="release-security-item">
+                            <span class="security-label">ENCRYPTED FRAGMENTS</span>
+                            <strong id="fragmentStatus">CHECKING</strong>
+                            <small>Protected question fragments</small>
+                        </div>
+                        <div class="release-security-item">
+                            <span class="security-label">PLAINTEXT</span>
+                            <strong id="plaintextStatus">NONE</strong>
+                            <small>No plaintext persisted</small>
+                        </div>
+                        <div class="release-security-item">
+                            <span class="security-label">RELEASE STATUS</span>
+                            <strong id="authorizationStatus">REQUIRED</strong>
+                            <small>Controlled release execution</small>
+                        </div>
+                    </div>
+
+                    <div class="release-action-row">
+                        <div>
+                            <div class="release-action-label">CONTROLLED RELEASE</div>
+                            <p id="releaseMessage">Select an examination to inspect its release state.</p>
+                        </div>
+                        <button id="authorizeReleaseButton" class="primary-button" type="button" disabled>
+                            Release Locked
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="large-panel release-audit-panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="eyebrow">SECURITY RECORD</div>
+                        <h2>Release conditions</h2>
+                        <p>Every condition must pass before the protected question paper can enter the controlled release path.</p>
+                    </div>
+                </div>
+
+                <div class="panel-body release-panel-content">
+                    <div class="release-condition-list">
+                        <div class="release-condition">
+                            <span class="condition-number">01</span>
+                            <div>
+                                <strong>Time gate</strong>
+                                <span>The configured examination release time must be reached.</span>
+                            </div>
+                            <b id="conditionTime">LOCKED</b>
+                        </div>
+                        <div class="release-condition">
+                            <span class="condition-number">02</span>
+                            <div>
+                                <strong>Threshold custody</strong>
+                                <span>At least 3 of the 5 protected shares must reconstruct the registered AES-256 key.</span>
+                            </div>
+                            <b id="conditionCustody">PENDING</b>
+                        </div>
+                        <div class="release-condition">
+                            <span class="condition-number">03</span>
+                            <div>
+                                <strong>Encrypted fragments</strong>
+                                <span>All protected fragments must use the examination custody key.</span>
+                            </div>
+                            <b id="conditionFragments">PENDING</b>
+                        </div>
+                        <div class="release-condition">
+                            <span class="condition-number">04</span>
+                            <div>
+                                <strong>Controlled execution</strong>
+                                <span>The release agent reconstructs and decrypts the paper only in memory.</span>
+                            </div>
+                            <b id="conditionAuthorization">REQUIRED</b>
+                        </div>
+                        <div class="release-condition">
+                            <span class="condition-number">05</span>
+                            <div>
+                                <strong>MPC manifest verified</strong>
+                                <span>The additive secret-sharing MPC manifest must be computed and verified over all encrypted fragments.</span>
+                            </div>
+                            <b id="conditionMpc">PENDING</b>
+                        </div>
+                        <div class="release-condition">
+                            <span class="condition-number">06</span>
+                            <div>
+                                <strong>VDF proof verified</strong>
+                                <span>The sequential SHA-256 VDF commitment must be verified and the time gate must be satisfied.</span>
+                            </div>
+                            <b id="conditionVdf">PENDING</b>
+                        </div>
+                        <div class="release-condition">
+                            <span class="condition-number">07</span>
+                            <div>
+                                <strong>Canary status clear</strong>
+                                <span>No canary decoy fragment may have been triggered. A triggered canary permanently blocks the release.</span>
+                            </div>
+                            <b id="conditionCanary">CHECKING</b>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
 
     <script type="module" src="/js/auth.js"></script>
-    <script src="/js/shell.js"></script>
+    <script type="module" src="/js/shell.js"></script>
     <script src="/js/spotlight.js"></script>
-    <script src="/js/release.js"></script>
+    <script type="module" src="/js/release.js"></script>
 </body>
 </html>

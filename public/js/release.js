@@ -111,19 +111,6 @@ function waitForAuthentication() {
                                 return;
                             }
 
-                            if (
-                                !window.firebaseAuth ||
-                                !window.firebaseAuth.currentUser
-                            ) {
-                                reject(
-                                    new Error(
-                                        "Authenticated Firebase user is required."
-                                    )
-                                );
-
-                                return;
-                            }
-
                             resolve();
                         }
                     )
@@ -192,18 +179,31 @@ function waitForAuthentication() {
 }
 
 async function getAuthToken() {
+    if (typeof window.getAuthToken === "function") {
+        const t = await window.getAuthToken();
+        if (t) return t;
+    }
     const user =
         window.firebaseAuth?.currentUser;
 
-    if (!user) {
-        throw new Error(
-            "Authenticated Firebase user is required."
-        );
+    if (user) {
+        return await user.getIdToken();
     }
 
-    return await user.getIdToken(
-        true
-    );
+    return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error("Authenticated Firebase user is required.")), 6000);
+        const check = setInterval(async () => {
+            if (window.firebaseAuth?.currentUser) {
+                clearInterval(check);
+                clearTimeout(timeout);
+                try {
+                    resolve(await window.firebaseAuth.currentUser.getIdToken());
+                } catch (e) {
+                    reject(e);
+                }
+            }
+        }, 50);
+    });
 }
 
 async function apiRequest(
@@ -292,7 +292,8 @@ function renderReleasePage() {
         );
     }
 
-    container.innerHTML = `
+    if (!document.getElementById("releaseExamination")) {
+        container.innerHTML = `
         <div class="page">
 
             <section class="page-intro">
@@ -724,6 +725,7 @@ function renderReleasePage() {
 
         </div>
     `;
+    }
 
     populateExaminations();
 
@@ -754,6 +756,11 @@ function renderReleasePage() {
                 await inspectReleaseState();
             }
         );
+
+        if (selectedExaminationId) {
+            examinationSelect.value = selectedExaminationId;
+            inspectReleaseState();
+        }
     }
 
     const releaseButton =

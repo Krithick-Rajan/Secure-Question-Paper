@@ -12,6 +12,10 @@
 
     <title>Overview | Secure Question Paper</title>
 
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js">
+
     <link
         rel="stylesheet"
         href="/css/design.css"
@@ -70,11 +74,11 @@
                 <span>ACTIVE EXAMINATIONS</span>
             </div>
 
-            <div class="stat-number">
+            <div class="stat-number" id="overview-active-exams">
                 00
             </div>
 
-            <div class="stat-bottom">
+            <div class="stat-bottom" id="overview-active-exams-bottom">
                 No active examination
             </div>
 
@@ -87,11 +91,11 @@
                 <span>PROTECTED FRAGMENTS</span>
             </div>
 
-            <div class="stat-number">
+            <div class="stat-number" id="overview-fragments">
                 00
             </div>
 
-            <div class="stat-bottom">
+            <div class="stat-bottom" id="overview-fragments-bottom">
                 Encrypted fragments
             </div>
 
@@ -165,7 +169,7 @@
             </div>
 
 
-            <div class="control-empty">
+            <div class="control-empty" id="overviewControlBody">
 
                 <div class="control-symbol">
 
@@ -518,7 +522,7 @@
             </div>
 
 
-            <div class="empty-small">
+            <div class="empty-small" id="overviewSecurityEventsBody">
 
                 <div class="empty-small-icon">
 
@@ -580,7 +584,7 @@
             </div>
 
 
-            <div class="empty-small">
+            <div class="empty-small" id="overviewFragmentStatusBody">
 
                 <div class="empty-small-icon">
 
@@ -649,6 +653,7 @@
 <script type="module" src="/js/auth.js"></script>
 <script type="module" src="/js/shell.js"></script>
 <script src="/js/spotlight.js"></script>
+<script type="module" src="/js/overview.js"></script>
 
 </body>
 

@@ -6,8 +6,11 @@ let allUsers = [];
 async function initUsersPage() {
     try {
         await window.authReady;
-        if (!window.firebaseAuth?.currentUser) { return; }
-        await waitForUsersToken();
+        const token = typeof window.getAuthToken === "function"
+            ? await window.getAuthToken()
+            : await window.firebaseAuth?.currentUser?.getIdToken();
+        if (!token) { return; }
+        usersToken = token;
         await Promise.all([loadAllUsers(), loadExamsForAssign()]);
         wireUsersEvents();
     } catch (_error) {
@@ -99,7 +102,12 @@ function renderUsersList(users) {
         bodyEl.innerHTML = `<div class="portal-empty">No users found.</div>`;
         return;
     }
-    const ROLE_BADGE = { admin: "badge-pass", setter: "badge-warn", custodian: "badge-neutral", "print-operator": "badge-neutral" };
+    const ROLE_BADGE = {
+        admin: "badge-admin",
+        setter: "badge-setter",
+        custodian: "badge-custodian",
+        "print-operator": "badge-print-operator"
+    };
     bodyEl.innerHTML = users.map(u => `
         <div class="user-row">
             <div class="user-row-avatar">${escUHtml((u.email || "?")[0].toUpperCase())}</div>
@@ -198,9 +206,12 @@ async function handleCreateUser() {
         if (!res.ok || !data.success) throw new Error(data.message || "Failed to create user.");
 
         if (msgEl) { msgEl.textContent = `\u2713 User created: ${data.user.email} (${data.user.role})`; msgEl.className = "form-message success"; }
-        document.getElementById("newUserEmail").value       = "";
-        document.getElementById("newUserPassword").value   = "";
-        document.getElementById("newUserDisplayName").value = "";
+        const emailInput = document.getElementById("newUserEmail");
+        const passwordInput = document.getElementById("newUserPassword");
+        const nameInput = document.getElementById("newUserDisplayName");
+        if (emailInput) emailInput.value = "";
+        if (passwordInput) passwordInput.value = "";
+        if (nameInput) nameInput.value = "";
 
         await loadAllUsers();
     } catch (_err) {

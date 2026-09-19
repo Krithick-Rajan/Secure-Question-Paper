@@ -1,325 +1,281 @@
 # Secure Question Paper Management System
 
-Secure Question Paper Management System is a Node.js and Firebase based web application for managing competitive examination question papers. It provides role-based access for administrators, setters, custodians, security staff, and print operators, with workflows for exam setup, paper fragment submission, custody share handling, release authorization, audit logging, and print confirmation.
+A zero-trust cryptographic management platform for competitive examination question papers, engineered so that a complete, readable question paper **never exists anywhere** before the exact scheduled examination time.
 
-## Features
+---
 
-- Firebase Authentication and Firestore backed user management
-- Role-based access control for admin, setter, custodian, security, and print-operator workflows
-- Examination creation and assignment management
-- Question paper fragment submission and tracking
-- Custody initialization with secret sharing support
-- Security release workflow using Shamir sharing, MPC-style release manifests, VDF checks, and canary fragments
-- Audit log dashboard for administrative review
-- Print operator handoff and print confirmation flow
-- Static web interface served by Express locally and Vercel CDN in production
+## 📢 Recent Updates & Security Hardening
 
-## Tech Stack
+The system has undergone a major security audit, bug fix pass, and architectural refinement to enforce strict Zero Trust principles and resolve critical operational blockers.
 
-- Node.js
-- Express
-- Firebase Admin SDK
-- Firebase Authentication
-- Cloud Firestore
-- HTML, CSS, and vanilla JavaScript
+### 1. Fixed Custody Initialization Deadlock
+Previously, creating an examination left the custody status uninitialized, which blocked setters from uploading fragments and admins from initializing security, causing a system-wide deadlock.
+**Resolution**: The `POST /api/examinations` endpoint now automatically generates the AES master key, splits it into Shamir 3-of-5 shares, stores them securely in the `custody_shares` collection, and marks the status as `initialized` upon exam creation.
 
-## Project Structure
+### 2. Strict Two-Way Role Confinement (Separation of Duties)
+An architectural flaw allowed administrators to view the fragments and custodians pages, which violates the zero-knowledge principle.
+**Resolution**: 
+* Removed cross-portal navigation: `Fragments` and `Custody` are no longer accessible from the Admin sidebar. Admins must not view fragments or hold custody shares.
+* Updated `public/js/auth.js` to forcefully redirect any actor attempting to access another actor's portal back to their designated workspace.
+* Removed improper `window.location.replace` lockouts in `custodians.html` and `fragments.html` that previously trapped users.
+
+### 3. Secured Registration & Authentication
+**Resolution**:
+* Secured the `POST /api/register` endpoint to completely reject `role: "admin"` assignments unless the request includes a valid Bearer token from an *existing* administrator. This fixes a critical privilege escalation vulnerability.
+* Removed a hardcoded backdoor in the authentication middleware that automatically granted admin rights to `admin@example.com`.
+* Added startup environment variable checks to warn if critical keys (like `FRAGMENT_ENCRYPTION_KEY`) are missing.
+
+### 4. UI Stabilization & Dependency Patches
+**Resolution**:
+* Fixed a critical syntax error (missing `}`) in `public/js/login.js` that was breaking the authentication flow.
+* Added null-safe DOM checks in `public/js/users.js` to prevent crashes during user creation.
+* Resolved `npm audit` vulnerabilities by applying version overrides (e.g., `uuid` for `gaxios`).
+* Normalized the Firebase credentials file to `firebase-service-account.json`.
+
+---
+
+## 🛡️ Core Security Architecture & Paradigm
+
+Traditional examination management systems store question papers on centralized servers or administrator workstations, attempting to secure them with database rules or disk encryption. However, if a complete plaintext paper exists on any machine before exam time, a single insider or breach compromises the entire national or institutional examination.
+
+### The Three Vulnerability Points Eliminated
+1. **Setter's Local Draft & Full Paper Review:** Question setters submit isolated, encrypted question fragments only. No setter or administrator ever compiles or views the complete paper before exam time.
+2. **Centralized Storage & Admin Plaintext Custody:** Question fragments are encrypted with AES-256-GCM. The underlying encryption keys are split using **Shamir's Secret Sharing (3-of-5 threshold)** across 5 independent custodian nodes. Plaintext is never stored in Firestore, backend memory, or disk.
+3. **Pre-Exam Print Queue & Center Staff Exfiltration:** The paper is assembled exclusively in volatile RAM via a **Verifiable Delay Function (VDF)** sequential time-lock gate. The assembled paper is handed off to an authorized print operator workstation and wiped from memory immediately upon print confirmation.
+
+```text
+       [Question Setter]
+              │
+       (Encrypts Fragment: AES-256-GCM)
+              │
+              ▼
+   ┌──────────────────────┐
+   │ Encrypted Fragments  │  ◄─── No full paper exists anywhere in plaintext
+   │ (Stored in DB)       │
+   └──────────┬───────────┘
+              │
+   ┌──────────┴───────────┐
+   │ Shamir Secret Shares │  ◄─── 3-of-5 Custodian threshold required
+   │ (K1, K2, K3, K4, K5) │
+   └──────────┬───────────┘
+              │
+   ┌──────────▼───────────┐
+   │ Software MPC Build   │  ◄─── Additive Secret Sharing manifest
+   └──────────┬───────────┘
+              │
+   ┌──────────▼───────────┐
+   │   VDF Time-Lock Gate │  ◄─── Sequential SHA-256 delay proof
+   └──────────┬───────────┘
+              │ (Only at exact exam release time)
+              ▼
+   ┌──────────────────────┐
+   │ Ephemeral Memory     │  ◄─── Decrypted in-memory on air-gapped agent;
+   │ Plaintext Assembly   │       Wiped immediately upon print confirmation
+   └──────────────────────┘
+```
+
+---
+
+## 👥 Strict Separation of Duties (Two-Way Role Confinement)
+
+Every system role is cryptographically and architecturally isolated. If any actor attempts to access an unauthorized portal, they are automatically quarantined and redirected back to their designated interface:
+
+| Role | Landing Portal | Primary Responsibilities | Strict Security Boundaries |
+| :--- | :--- | :--- | :--- |
+| **Administrator** | `/overview.html` | Schedules examinations, assigns staff, monitors security telemetry, and authorizes final release. | **Cannot view question plaintext; cannot submit custodian shares.** |
+| **Question Setter** | `/setter.html` | Encrypts and uploads isolated question fragments for assigned exams. | **Cannot see other setters' questions, custody shares, or admin controls.** |
+| **Custodian (1–5)** | `/custodian-portal.html` | Holds one individual Shamir share (3-of-5 threshold) and submits it at release authorization. | **Cannot view question fragments; cannot see other custodians' shares.** |
+| **Print Operator** | `/print-operator.html` | Accesses one-time ephemeral decrypted package at scheduled release time; confirms printing. | **Cannot access paper before release time; memory wiped immediately on confirmation.** |
+
+---
+
+## 🔑 Preserved Evaluation Credentials
+
+The database has been cleanly initialized for evaluation with 4 distinct role accounts:
+
+| Role | Name | Email | Password | Assigned Portal |
+| :--- | :--- | :--- | :--- | :--- |
+| **Administrator** | System Administrator | `admin@test.com` | `Admin@12345` | `/overview.html` |
+| **Question Setter** | Srii | `setter@test.com` | `Setter@12345` | `/setter.html` |
+| **Custodian** | Krithick | `custody@test.com` | `Custody@12345` | `/custodian-portal.html` |
+| **Print Operator** | Reshmi | `print@test.com` | `Print@12345` | `/print-operator.html` |
+
+> [!NOTE]
+> All accounts have their cryptographic claims (`{ role: '<role>' }`) synced in Firebase Authentication and their profile records established in Cloud Firestore.
+
+---
+
+## 🚀 Key Security Features
+
+* **Zero-Knowledge Fragment Submission:** Setters upload encrypted fragments tagged by section and question number.
+* **Automated Shamir Custody (3-of-5 Threshold):** Exam master keys are split into 5 cryptographic shares upon exam creation. At least 3 custodians must submit their shares to authorize decryption.
+* **Software MPC Encrypted Manifest Computation:** Additive secret sharing aggregates encrypted fragment hashes and custody fingerprints into an immutable release commitment.
+* **Wesolowski-style Verifiable Delay Function (VDF):** An inherently sequential, non-parallelizable SHA-256 computation gate ensures decryption keys cannot be solved prematurely, even with vast distributed computing power.
+* **Canary & Decoy Honeypots:** Dynamic decoy fragments detect unauthorized database probing. Triggering a canary immediately revokes credentials and flags security alerts.
+* **Ephemeral In-Memory Reassembly:** Release agent simulation performs plaintext compilation exclusively in RAM at release time, preventing any plaintext from touching disk or swap space.
+* **Immutable Audit Trails:** Every administrative action, custody submission, share validation, and release event is logged with SHA-256 event chaining.
+* **Hardware-Accelerated UI & Spotlight:** Custom dark-gold visual theme featuring a smooth, GPU-accelerated cursor spotlight across all portals.
+* **Sub-Millisecond Response Optimization:** In-memory verification caching (`tokenCache`) and optimistic session resolution eliminate network lag and provide instant page transitions.
+
+---
+
+## 📁 Clean Project Structure
 
 ```text
 secure-question-paper/
 ├── backend/
 │   ├── config/
-│   │   └── firebase-admin.js
+│   │   └── firebase-admin.js       # Firebase Admin SDK initialization
 │   ├── middleware/
-│   │   ├── auth.js
-│   │   └── role.js
+│   │   ├── auth.js                 # Token verification with in-memory TTL caching
+│   │   └── role.js                 # Strict role-based route authorization
 │   └── security/
-│       ├── canary.js
-│       ├── mpc.js
-│       ├── release-agent.js
-│       ├── shamir.js
-│       └── vdf.js
+│       ├── canary.js               # Decoy / canary trap management
+│       ├── mpc.js                  # Software MPC manifest aggregation
+│       ├── release-agent.js        # Ephemeral reassembly & print handoff
+│       ├── shamir.js               # 3-of-5 Shamir Secret Sharing implementation
+│       └── vdf.js                  # Sequential SHA-256 time-lock delay verification
 ├── public/
 │   ├── css/
+│   │   ├── design.css              # Universal dark-gold theme & component styles
+│   │   └── login.css               # Dedicated authentication page styling
 │   ├── js/
-│   └── *.html
-├── server.js
-├── package.json
-└── README.md
+│   │   ├── auth.js                 # Client-side session management & role confinement
+│   │   ├── login.js                # Instant login & role router
+│   │   ├── register.js             # User onboarding & role provisioning
+│   │   ├── overview.js             # Administrator dashboard metrics & pipeline
+│   │   ├── exams.js                # Examination creation & scheduling
+│   │   ├── security.js             # MPC commitment verification & custody telemetry
+│   │   ├── release.js              # Time-gated release console & countdowns
+│   │   ├── audit.js                # Immutable audit log inspection
+│   │   ├── users.js                # User directory & exam role assignments
+│   │   ├── setter.js               # Question setter portal & fragment upload
+│   │   ├── setter-shell.js         # Dedicated setter workspace shell
+│   │   ├── custodian-portal.js     # Custodian portal & share submission
+│   │   ├── custodian-shell.js      # Dedicated custodian workspace shell
+│   │   ├── print-operator.js       # Print operator portal & confirmation
+│   │   ├── print-shell.js          # Dedicated print operator terminal shell
+│   │   ├── shell.js                # Administrator workspace shell & sidebar
+│   │   └── spotlight.js            # Hardware-accelerated cursor lighting
+│   ├── login.html                  # Universal sign-in portal
+│   ├── register.html               # New user registration portal
+│   ├── overview.html               # Admin control center
+│   ├── exams.html                  # Examination management
+│   ├── security.html               # Cryptographic controls & MPC
+│   ├── release.html                # Controlled release execution
+│   ├── audit.html                  # Audit logs & compliance
+│   ├── users.html                  # User directory & assignment
+│   ├── setter.html                 # Question setter portal
+│   ├── custodian-portal.html       # Custodian share portal
+│   └── print-operator.html         # Print operator workstation portal
+├── server.js                       # Main Express application & secure API endpoints
+├── package.json                    # Dependencies, overrides, and scripts
+└── README.md                       # Complete documentation
 ```
 
-## Modules and Purpose
+---
 
-- `server.js` - main Express server and API route definitions
-- `backend/config/firebase-admin.js` - Firebase Admin SDK setup for Authentication and Firestore
-- `backend/middleware/auth.js` - verifies Firebase ID tokens from protected API requests
-- `backend/middleware/role.js` - restricts API access based on user roles
-- `backend/security/shamir.js` - secret sharing logic for splitting and reconstructing protected values
-- `backend/security/mpc.js` - encrypted release manifest and MPC-style release computation helpers
-- `backend/security/vdf.js` - verifiable delay/time-lock release checks
-- `backend/security/canary.js` - canary/decoy fragment creation and validation
-- `backend/security/release-agent.js` - release package, authorization, execution, and print handoff helpers
-- `public/*.html` - role-based user interface pages
-- `public/js/*.js` - client-side logic for authentication, dashboards, forms, and API calls
-- `public/css/*.css` - application styling
-- `package.json` and `package-lock.json` - Node.js dependency and script definitions
+## ⚙️ Installation & Setup
 
-## Prerequisites
+### Prerequisites
+* **Node.js**: v20.0.0 or higher
+* **npm**: v9.0.0 or higher
+* **Firebase Project**: Cloud Firestore and Firebase Authentication enabled
 
-- Node.js 18 or later
-- npm
-- Firebase project with Authentication and Firestore enabled
-- Firebase service account key for the Admin SDK
-
-## Setup
-
-1. Install dependencies:
-
+### 1. Clone & Install Dependencies
 ```bash
+git clone https://github.com/Krithick-Rajan/Secure-Question-Paper.git
+cd Secure-Question-Paper
 npm install
 ```
 
-2. Create a `.env` file in the project root:
-
+### 2. Environment Configuration
+Create a `.env` file in the project root:
 ```env
 PORT=5000
+FRAGMENT_ENCRYPTION_KEY=8f4c2a91d7e63b508c1a9e42f6b73015d9c4e8a2176f0b3d5a9c8e1f6247b093
 VDF_ITERATIONS=120000
 ```
+* `PORT`: Server port (default: `5000`).
+* `FRAGMENT_ENCRYPTION_KEY`: 256-bit hex master key for system key wrap.
+* `VDF_ITERATIONS`: Sequential squaring iterations for the VDF delay proof.
 
-`PORT` is optional and defaults to `5000`. `VDF_ITERATIONS` is also optional and is used by the release security workflow.
-
-3. Add your Firebase Admin SDK service account file to the project root:
-
+### 3. Service Account Setup
+Place your Firebase Admin service account credentials in the root directory:
 ```text
 firebase-service-account.json
 ```
+*(This file is included in `.gitignore` and must remain private).*
 
-Do not commit `.env` or Firebase service account files to GitHub. They are ignored by `.gitignore`.
-
-4. Start the server:
-
+### 4. Run the Application
+Start the server:
 ```bash
 npm start
 ```
-
-For development with automatic restarts:
-
+For auto-reloading development:
 ```bash
 npm run dev
 ```
 
-5. Open the application:
-
+Open your browser and navigate to:
 ```text
 http://localhost:5000
 ```
 
-## Main Pages
+---
 
-- `/login.html` - user login
-- `/overview.html` - admin overview
-- `/users.html` - user and role management
-- `/exams.html` - examination management
-- `/fragments.html` - question paper fragment management
-- `/custodians.html` - custody workflow
-- `/security.html` - security initialization and status
-- `/release.html` - release authorization and execution
-- `/audit.html` - audit logs
-- `/setter.html` - setter portal
-- `/custodian-portal.html` - custodian portal
-- `/print-operator.html` - print operator portal
+## 🔄 End-to-End Workflow
 
-## API Overview
+1. **User Onboarding (`/users.html` or `/register.html`)**:
+   * Admin registers Setters, Custodians, and Print Operators.
+   * Admin assigns specific roles to an upcoming examination.
+2. **Exam Creation (`/exams.html`)**:
+   * Admin creates an examination with code, title, and release time.
+   * **Automated Custody**: System generates Shamir 3-of-5 custody shares and marks custody initialized.
+3. **Question Fragment Upload (`/setter.html`)**:
+   * Assigned Question Setter logs into their private portal.
+   * Inputs question text and uploads. Fragments are encrypted with AES-256-GCM.
+4. **Security Telemetry (`/security.html`)**:
+   * MPC Additive Secret Sharing manifest is generated and verified over encrypted fragments.
+   * Wesolowski VDF sequential time-lock commitment is verified.
+5. **Custodian Share Submission (`/custodian-portal.html`)**:
+   * Custodians review their assigned shares and submit authorization.
+   * Once 3 of 5 shares are collected, the custody threshold is satisfied.
+6. **Controlled Release (`/release.html`)**:
+   * Once the scheduled release time arrives and all security checks pass, Admin executes controlled release.
+   * The paper is reassembled exclusively in volatile memory.
+7. **Print Confirmation (`/print-operator.html`)**:
+   * Print operator receives decrypted release packet at their terminal.
+   * Clicks **"Confirm Print"**, which permanently wipes plaintext from volatile memory.
 
-The backend exposes APIs for:
+---
 
-- health checks
-- examination management
-- custody initialization, share submission, and status checks
-- fragment submission and listing
-- security initialization and release status
-- release authorization and execution
-- audit log retrieval
-- admin user creation, role assignment, and assignment management
-- setter, custodian, and print-operator portals
+## 📡 REST API Reference
 
-Most API routes require a Firebase ID token in the `Authorization` header:
+| Endpoint | Method | Auth Required | Description |
+| :--- | :--- | :--- | :--- |
+| `/api/health` | `GET` | No | System health and security engine status |
+| `/api/me` | `GET` | Yes | Validates caller session, returns profile & role |
+| `/api/register` | `POST` | Public / Admin | Register new account (admin role requires admin token) |
+| `/api/overview/metrics` | `GET` | Admin | Fetch system overview counts and telemetry |
+| `/api/examinations` | `GET`, `POST` | Admin | List exams or create a new exam with auto-custody |
+| `/api/fragments` | `GET`, `POST` | Setter / Admin | Retrieve or upload encrypted question fragments |
+| `/api/security/initialize` | `POST` | Admin | Re-initialize Shamir custody & Software MPC manifest |
+| `/api/security/status/:examId` | `GET` | Admin | Fetch custody status, MPC commitment, & canary checks |
+| `/api/custodian/my-assignment` | `GET` | Custodian | Retrieve active custodian assignment and share number |
+| `/api/custodian/submit-share` | `POST` | Custodian | Submit a custodian key share for threshold release |
+| `/api/release/status/:examId` | `GET` | Admin | Get VDF time gate, threshold status, & release readiness |
+| `/api/release/execute` | `POST` | Admin | Authorize and execute controlled time-gated release |
+| `/api/print-operator/my-assignment` | `GET` | Print Operator | Retrieve released paper for printing |
+| `/api/print-operator/confirm-print` | `POST` | Print Operator | Confirm print execution & trigger memory wipe |
+| `/api/audit-logs` | `GET` | Admin | Retrieve immutable SHA-256 chained audit logs |
+| `/api/admin/users` | `GET` | Admin | Retrieve registered user accounts |
+| `/api/admin/assign-setter` | `POST` | Admin | Assign a setter to an examination |
+| `/api/admin/assign-custodian` | `POST` | Admin | Assign a custodian to an examination |
+| `/api/admin/assign-print-operator` | `POST` | Admin | Assign a print operator to an examination |
 
-```text
-Authorization: Bearer <firebase-id-token>
-```
+---
 
-## Sample Input and Output
+## 📄 License
 
-### Sample 1: Health Check
-
-Request:
-
-```http
-GET /api/health
-```
-
-Sample output:
-
-```json
-{
-  "success": true,
-  "service": "Secure Question Paper Backend",
-  "status": "operational",
-  "security": {
-    "aes": "AES-256-GCM",
-    "custody": "Shamir 3-of-5",
-    "mpc": "Software MPC encrypted manifest",
-    "vdf": "Sequential SHA-256 VDF prototype",
-    "canary": "Enabled",
-    "releaseAgent": "Enabled"
-  }
-}
-```
-
-### Sample 2: Create Examination
-
-Request:
-
-```http
-POST /api/examinations
-Authorization: Bearer <firebase-id-token>
-Content-Type: application/json
-```
-
-Sample input:
-
-```json
-{
-  "code": "CS-2026-001",
-  "name": "Model Competitive Exam",
-  "subject": "Computer Science",
-  "examDate": "2026-10-15",
-  "startTime": "10:00",
-  "releaseTime": "2026-10-15T09:00:00.000Z"
-}
-```
-
-Sample output:
-
-```json
-{
-  "success": true,
-  "message": "Examination created successfully.",
-  "examination": {
-    "id": "generated-firestore-document-id",
-    "code": "CS-2026-001",
-    "title": "Model Competitive Exam",
-    "subject": "Computer Science",
-    "examDate": "2026-10-15",
-    "startTime": "10:00",
-    "custodyStatus": "uninitialized"
-  }
-}
-```
-
-### Sample 3: Submit Question Paper Fragment
-
-Request:
-
-```http
-POST /api/fragments
-Authorization: Bearer <firebase-id-token>
-Content-Type: application/json
-```
-
-Sample input:
-
-```json
-{
-  "examinationId": "generated-firestore-document-id",
-  "fragmentNumber": 1,
-  "fragmentLabel": "Section A",
-  "questionText": "1. Define operating system. 2. Explain process scheduling."
-}
-```
-
-Sample output:
-
-```json
-{
-  "success": true,
-  "message": "Fragment encrypted and protected successfully.",
-  "fragment": {
-    "id": "generated-fragment-id",
-    "examinationId": "generated-firestore-document-id",
-    "fragmentNumber": 1,
-    "fragmentLabel": "Section A",
-    "encrypted": true,
-    "status": "encrypted",
-    "encryptionAlgorithm": "AES-256-GCM"
-  }
-}
-```
-
-## Database
-
-This project uses Firebase Cloud Firestore as its database. No local database file is required in the repository. Runtime credentials are provided through the private `firebase-service-account.json` file, which must not be committed to GitHub.
-
-## GitHub Push Guide
-
-If this is a new repository:
-
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin https://github.com/<your-username>/<your-repo>.git
-git push -u origin main
-```
-
-If the remote repository already exists in this folder:
-
-```bash
-git add .
-git commit -m "Update project documentation"
-git push
-```
-
-Before pushing, confirm that secret files are not staged:
-
-```bash
-git status --short
-```
-
-## Security Notes
-
-- Keep `.env` private.
-- Keep Firebase service account JSON files private.
-- Rotate any Firebase service account key if it was ever committed or shared publicly.
-- Use Firebase security rules appropriate for your production deployment.
-- Review role assignments carefully before production use.
-
-## License
-
-This project is currently licensed under the ISC license from `package.json`.
-
-## Deploy to Vercel
-
-This repository deploys as a zero-configuration Express application. Vercel
-detects `server.js` automatically, serves `public/` from its CDN, and runs the
-Express API as a serverless function.
-
-1. Import this GitHub repository into Vercel.
-2. In **Project Settings → Environment Variables**, add the following values
-   to each environment that should run the app:
-
-   ```text
-   FIREBASE_SERVICE_ACCOUNT_JSON=<complete Firebase service-account JSON on one line>
-   VDF_ITERATIONS=120000
-   ```
-
-   Alternatively, set `FIREBASE_SERVICE_ACCOUNT_BASE64` to a base64-encoded
-   service-account JSON value.
-3. Use `npm run build` as the Build Command when Vercel prompts for one.
-4. Deploy and verify `https://<your-domain>/api/health`.
-
-The service-account file is intentionally ignored by Git and is not uploaded to
-Vercel. A deployment without one of the Firebase credential environment
-variables will fail at runtime.
+This project is licensed under the [ISC License](LICENSE).

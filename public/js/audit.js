@@ -83,6 +83,10 @@ async function waitForAuthentication() {
 }
 
 async function getAuthToken() {
+    if (typeof window.getAuthToken === "function") {
+        const t = await window.getAuthToken();
+        if (t) return t;
+    }
     if (
         !window.firebaseAuth
     ) {
@@ -94,13 +98,24 @@ async function getAuthToken() {
     const user =
         window.firebaseAuth.currentUser;
 
-    if (!user) {
-        throw new Error(
-            "Administrator session has expired."
-        );
+    if (user) {
+        return await user.getIdToken();
     }
 
-    return await user.getIdToken();
+    return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error("Administrator session has expired.")), 6000);
+        const check = setInterval(async () => {
+            if (window.firebaseAuth?.currentUser) {
+                clearInterval(check);
+                clearTimeout(timeout);
+                try {
+                    resolve(await window.firebaseAuth.currentUser.getIdToken());
+                } catch (e) {
+                    reject(e);
+                }
+            }
+        }, 50);
+    });
 }
 
 async function loadAuditLogs() {

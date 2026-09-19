@@ -16,26 +16,21 @@ async function initializeCustodyPage() {
             );
         }
 
-        const user =
-            window.firebaseAuth.currentUser;
+        const authState =
+            await window.authReady;
 
-        if (!user) {
-            window.location.href =
-                "/login.html";
+        if (!authState || !authState.authenticated) {
             return;
         }
 
-        if (
-            typeof user.getIdToken !==
-            "function"
-        ) {
-            throw new Error(
-                "Firebase authenticated user is unavailable."
-            );
-        }
-
         const token =
-            await user.getIdToken();
+            typeof window.getAuthToken === "function"
+                ? await window.getAuthToken()
+                : await window.firebaseAuth?.currentUser?.getIdToken();
+
+        if (!token) {
+            return;
+        }
 
         const examinationsResponse =
             await fetch(
@@ -119,6 +114,11 @@ async function initializeCustodyPage() {
             }
         );
 
+        if (examinationsData.examinations && examinationsData.examinations.length > 0) {
+            examinationSelect.value = examinationsData.examinations[0].id;
+            await loadCustodyStatus(examinationSelect.value, token);
+        }
+
     } catch (error) {
 
         showCustodyError(
@@ -196,7 +196,6 @@ async function loadCustodyStatus(
                 custody
             );
 
-            // Show the submit-share panel so custodians can submit at release time
             renderSubmitShareSection(examinationId, token);
 
         } else {
@@ -1064,9 +1063,6 @@ async function initializeCustody(
             );
         }
 
-        // ── One-time share disclosure ─────────────────────────────────
-        // data.shares contains all 5 share values — shown ONCE, then gone.
-        // ─────────────────────────────────────────────────────────────────
         if (data.shares && data.shares.length > 0) {
             renderShareDisclosure(
                 data.shares,
@@ -1127,7 +1123,6 @@ function renderShareDisclosure(
 
             </div>
 
-
             <div class="share-disclosure-grid">
 
                 ${shares.map(
@@ -1161,7 +1156,6 @@ function renderShareDisclosure(
                 ).join("")}
 
             </div>
-
 
             <div class="share-disclosure-actions">
 
@@ -1216,7 +1210,6 @@ function downloadShare(shareId, shareValue, examCode) {
     URL.revokeObjectURL(url);
 }
 
-// Make downloadShare accessible from onclick attributes
 window.downloadShare = downloadShare;
 
 function renderSubmitShareSection(examinationId, token) {
@@ -1225,7 +1218,6 @@ function renderSubmitShareSection(examinationId, token) {
 
     if (!resultElement) return;
 
-    // Append submit-share panel below the custody status
     const existing =
         document.getElementById("submitSharePanel");
 
@@ -1249,13 +1241,11 @@ function renderSubmitShareSection(examinationId, token) {
 
         </div>
 
-
         <p class="submit-share-desc">
             To release this examination, 3 of the 5 custodians must submit
             their share here. Each custodian pastes the share value they
             received at initialization.
         </p>
-
 
         <div class="submit-share-form">
 
@@ -1306,7 +1296,6 @@ function renderSubmitShareSection(examinationId, token) {
 
     resultElement.appendChild(panel);
 
-    // Wire up the submit button
     document
         .getElementById("submitShareButton")
         ?.addEventListener(
@@ -1316,7 +1305,6 @@ function renderSubmitShareSection(examinationId, token) {
             }
         );
 
-    // Load current share count
     refreshShareCount(examinationId, token);
 }
 
@@ -1343,7 +1331,7 @@ async function refreshShareCount(examinationId, token) {
         }
 
     } catch (_error) {
-        /* non-fatal */
+
     }
 }
 
@@ -1424,7 +1412,6 @@ async function handleShareSubmit(examinationId, token) {
         }
     }
 }
-
 
 function updateCustodyPositionRows(
     assignedCount

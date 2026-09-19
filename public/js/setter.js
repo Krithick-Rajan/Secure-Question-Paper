@@ -5,25 +5,26 @@ let setterSelectedExamId = null;
 let setterSelectedExamCode = "";
 let setterUploadWired = false;
 
-
 async function initSetterPage() {
     try {
         await window.authReady;
-        if (!window.firebaseAuth?.currentUser) { return; }
-        setterToken = await window.firebaseAuth.currentUser.getIdToken();
-        const user = window.firebaseAuth.currentUser;
+        const token = typeof window.getAuthToken === "function"
+            ? await window.getAuthToken()
+            : await window.firebaseAuth?.currentUser?.getIdToken();
+        if (!token) { return; }
+        setterToken = token;
+        const user = window.firebaseAuth?.currentUser || window.currentUserProfile || {};
         const a = document.getElementById('setterAvatar');
         const n = document.getElementById('setterName');
         const e = document.getElementById('setterEmail');
         if (a && user.email) a.textContent = user.email[0].toUpperCase();
-        if (n) n.textContent = user.displayName || 'Question Setter';
+        if (n) n.textContent = user.displayName || user.name || 'Question Setter';
         if (e) e.textContent = user.email || '';
         await loadSetterExams();
     } catch (_error) {
         showSetterMsg('Unable to load setter portal: ' + _error.message, 'error');
     }
 }
-
 
 function waitForSetterAuth() {
 
@@ -85,7 +86,6 @@ function waitForSetterAuth() {
     });
 }
 
-
 async function loadSetterExams() {
 
     const listEl = document.getElementById("setterExamList");
@@ -144,9 +144,12 @@ async function loadSetterExams() {
                         </span>
                         <b>&#8250;</b>
                     </div>
-
                 </div>
             `).join("");
+
+            if (exams.length > 0 && !setterSelectedExamId) {
+                selectSetterExam(exams[0].id, exams[0].code || exams[0].id, exams[0].name || "");
+            }
         }
 
     } catch (_err) {
@@ -159,7 +162,6 @@ async function loadSetterExams() {
         }
     }
 }
-
 
 function selectSetterExam(examId, examCode, examName) {
 
@@ -208,7 +210,6 @@ function selectSetterExam(examId, examCode, examName) {
 
 window.selectSetterExam = selectSetterExam;
 
-
 async function handleSetterUpload() {
 
     const titleEl   = document.getElementById("setterFragmentTitle");
@@ -248,6 +249,7 @@ async function handleSetterUpload() {
             body: JSON.stringify({
                 examinationId: setterSelectedExamId,
                 title,
+                fragmentLabel: title,
                 content,
                 isDecoy: false
             })
@@ -279,7 +281,6 @@ async function handleSetterUpload() {
         }
     }
 }
-
 
 async function loadSetterFragments() {
 
@@ -344,7 +345,7 @@ async function loadSetterFragments() {
                         </div>
 
                         <div class="setter-fragment-info">
-                            <strong>${esc(f.title || "Untitled")}</strong>
+                            <strong>${esc(f.fragmentLabel || f.title || f.label || "Protected Fragment")}</strong>
                             <span>
                                 ${esc(f.encryptionAlgorithm || "AES-256-GCM")}
                                 &bull; ${esc(createdAt)}
@@ -371,7 +372,6 @@ async function loadSetterFragments() {
     }
 }
 
-
 function showSetterMsg(msg, type) {
     const el = document.getElementById("setterUploadMessage");
     if (el) {
@@ -379,7 +379,6 @@ function showSetterMsg(msg, type) {
         el.className = `form-message ${type}`;
     }
 }
-
 
 function esc(v) {
     return String(v ?? "")
@@ -390,6 +389,4 @@ function esc(v) {
         .replace(/'/g, "&#039;");
 }
 
-
 initSetterPage();
-

@@ -143,6 +143,10 @@ document.addEventListener(
 );
 
 async function getAuthToken() {
+    if (typeof window.getAuthToken === "function") {
+        const t = await window.getAuthToken();
+        if (t) return t;
+    }
     const auth =
         window.firebaseAuth;
 
@@ -161,7 +165,7 @@ async function getAuthToken() {
         );
     }
 
-    return await user.getIdToken(true);
+    return await user.getIdToken();
 }
 
 async function loadExaminations() {
@@ -409,7 +413,7 @@ async function loadFragments() {
         );
 
     } catch (_error) {
-        /* silently swallow load error — page will show empty state */
+
     }
 }
 
@@ -714,10 +718,10 @@ function setSubmitting(
 async function initializeFragments() {
     try {
         await window.authReady;
-
-        if (
-            !window.firebaseAuth?.currentUser
-        ) {
+        const token = typeof window.getAuthToken === "function"
+            ? await window.getAuthToken()
+            : await window.firebaseAuth?.currentUser?.getIdToken();
+        if (!token) {
             return;
         }
 
@@ -725,9 +729,7 @@ async function initializeFragments() {
 
         await loadFragments();
 
-    } catch (_error) {
-        /* silently swallow initialization error */
-    }
+    } catch (_error) {}
 }
 
 initializeFragments();

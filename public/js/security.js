@@ -105,16 +105,31 @@ function waitForAuth() {
 }
 
 async function getAuthToken() {
+    if (typeof window.getAuthToken === "function") {
+        const t = await window.getAuthToken();
+        if (t) return t;
+    }
     const user =
         window.firebaseAuth?.currentUser;
 
-    if (!user) {
-        throw new Error(
-            "Authenticated user is required."
-        );
+    if (user) {
+        return await user.getIdToken();
     }
 
-    return await user.getIdToken(true);
+    return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error("Authenticated user is required.")), 6000);
+        const check = setInterval(async () => {
+            if (window.firebaseAuth?.currentUser) {
+                clearInterval(check);
+                clearTimeout(timeout);
+                try {
+                    resolve(await window.firebaseAuth.currentUser.getIdToken());
+                } catch (e) {
+                    reject(e);
+                }
+            }
+        }, 50);
+    });
 }
 
 async function securityApiRequest(url) {
@@ -165,18 +180,19 @@ function renderSecurityPage() {
 
     container.innerHTML = `
 
-        <div class="security-exam-selector">
-
-            <label for="securityExamSelect">
-                Examination
-            </label>
-
-            <select id="securityExamSelect">
-                <option value="">Select examination</option>
-            </select>
-
+        <div class="security-exam-selector" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="securityExamSelect">
+                    Examination
+                </label>
+                <select id="securityExamSelect">
+                    <option value="">Select examination</option>
+                </select>
+            </div>
+            <button id="initializeSecurityBtn" class="secondary-button" style="padding: 8px 16px; font-size: 13px;">
+                Initialize Security (MPC & VDF)
+            </button>
         </div>
-
 
         <div
             class="canary-alert-banner"
@@ -202,7 +218,6 @@ function renderSecurityPage() {
             </div>
 
         </div>
-
 
         <div
             class="security-live-grid"
@@ -274,7 +289,6 @@ function renderSecurityPage() {
                 </div>
 
             </div>
-
 
             <div class="security-module-card">
 
@@ -372,7 +386,6 @@ function renderSecurityPage() {
 
             </div>
 
-
             <div class="security-module-card">
 
                 <div class="security-module-header">
@@ -429,7 +442,6 @@ function renderSecurityPage() {
 
             </div>
 
-
             <div class="security-module-card">
 
                 <div class="security-module-header">
@@ -485,7 +497,6 @@ function renderSecurityPage() {
 
         </div>
 
-
         <div
             class="security-empty-state"
             id="securityEmptyState"
@@ -525,6 +536,41 @@ function renderSecurityPage() {
                 startSecurityPoll();
             }
         );
+    }
+
+    const initBtn = document.getElementById("initializeSecurityBtn");
+    if (initBtn) {
+        initBtn.addEventListener("click", async () => {
+            if (!securitySelectedId) {
+                alert("Please select an examination first.");
+                return;
+            }
+            initBtn.disabled = true;
+            initBtn.textContent = "Initializing MPC & VDF...";
+            try {
+                const token = await getAuthToken();
+                const response = await fetch("/api/security/initialize", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + token
+                    },
+                    body: JSON.stringify({ examinationId: securitySelectedId })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert("Cryptographic security initialized successfully! MPC manifest and VDF time-lock verified.");
+                    await loadSecurityStatus();
+                } else {
+                    alert(data.message || "Security initialization failed.");
+                }
+            } catch (err) {
+                alert("Error: " + err.message);
+            } finally {
+                initBtn.disabled = false;
+                initBtn.textContent = "Initialize Security (MPC & VDF)";
+            }
+        });
     }
 
     if (securitySelectedId) {
@@ -605,7 +651,6 @@ function renderSecurityStatus(security) {
     const canaryTriggered =
         canary.status === "TRIGGERED";
 
-    /* --- canary alert banner --- */
     const banner =
         document.getElementById(
             "canaryAlertBanner"
@@ -615,7 +660,6 @@ function renderSecurityStatus(security) {
         banner.hidden = !canaryTriggered;
     }
 
-    /* --- MPC panel --- */
     const mpcConfigured = mpc.configured === true;
     const mpcVerified = mpc.verified === true;
 
@@ -656,7 +700,6 @@ function renderSecurityStatus(security) {
             : "—"
     );
 
-    /* --- VDF panel --- */
     const vdfConfigured = vdf.configured === true;
     const vdfVerified = vdf.verified === true;
     const timeGateOpen = vdf.timeGateOpen === true;
@@ -724,7 +767,6 @@ function renderSecurityStatus(security) {
             : "—"
     );
 
-    /* --- Canary panel --- */
     setBadge(
         "canaryBadge",
         canaryTriggered
@@ -760,7 +802,6 @@ function renderSecurityStatus(security) {
                 : "—"
     );
 
-    /* --- Custody panel --- */
     const custodyVerified =
         custody.verified === true;
 

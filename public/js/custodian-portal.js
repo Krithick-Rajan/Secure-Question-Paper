@@ -6,15 +6,22 @@ let custodianAssignment = null;
 async function initCustodianPage() {
     try {
         await window.authReady;
-        if (!window.firebaseAuth?.currentUser) { return; }
-        custodianToken = await window.firebaseAuth.currentUser.getIdToken();
-        const user = window.firebaseAuth.currentUser;
+        const token = typeof window.getAuthToken === "function"
+            ? await window.getAuthToken()
+            : await window.firebaseAuth?.currentUser?.getIdToken();
+        if (!token) { return; }
+        custodianToken = token;
+        let user = window.firebaseAuth?.currentUser || window.currentUserProfile;
+        if (!user || !user.email) {
+            const meRes = await fetch("/api/me", { headers: { Authorization: "Bearer " + token } }).then(r => r.json()).catch(() => ({}));
+            if (meRes && meRes.user) user = meRes.user;
+        }
         const a = document.getElementById('custodianAvatar');
         const n = document.getElementById('custodianName');
         const e = document.getElementById('custodianEmail');
-        if (a && user.email) a.textContent = user.email[0].toUpperCase();
-        if (n) n.textContent = user.displayName || 'Custodian';
-        if (e) e.textContent = user.email || '';
+        if (a && user && user.email) a.textContent = user.email[0].toUpperCase();
+        if (n && user) n.textContent = user.displayName || user.name || 'Custodian';
+        if (e && user) e.textContent = user.email || '';
         await loadCustodianAssignment();
     } catch (_error) {
         showCustodianError('Unable to load custodian portal: ' + _error.message);
@@ -41,7 +48,7 @@ async function loadCustodianAssignment() {
 
         custodianAssignment = data.assignment;
 
-        const { examinationCode, examinationName, shareNumber, custodyStatus, shareSubmitted, releaseTime } = data.assignment;
+        const { examinationCode, examinationName, shareNumber, shareValue, custodyStatus, shareSubmitted, releaseTime } = data.assignment;
 
         if (bodyEl) {
             bodyEl.innerHTML = `
@@ -54,6 +61,12 @@ async function loadCustodianAssignment() {
                         <span>Your share number</span>
                         <strong class="share-card-label">SHARE #${escCHtml(shareNumber)}</strong>
                     </div>
+                    ${shareValue ? `
+                    <div class="portal-info-row">
+                        <span>Your assigned share value</span>
+                        <code style="font-family: monospace; font-size: 11px; word-break: break-all; color: var(--accent);">${escCHtml(shareValue)}</code>
+                    </div>
+                    ` : ""}
                     <div class="portal-info-row">
                         <span>Custody status</span>
                         <strong>${escCHtml(custodyStatus)}</strong>
@@ -64,7 +77,7 @@ async function loadCustodianAssignment() {
                     </div>
                     <div class="portal-info-row">
                         <span>Share submission</span>
-                        <strong>${shareSubmitted ? "&#x2713; Submitted" : "Not yet submitted"}</strong>
+                        <strong>${shareSubmitted ? "\u2713 Submitted" : "Not yet submitted"}</strong>
                     </div>
                 </div>
             `;
@@ -77,6 +90,11 @@ async function loadCustodianAssignment() {
 
         const numLabel = document.getElementById("custodianShareNumLabel");
         if (numLabel) numLabel.textContent = shareNumber;
+
+        const valInput = document.getElementById("custodianShareValue");
+        if (valInput && shareValue && !valInput.value) {
+            valInput.value = shareValue;
+        }
 
         const submitPanel = document.getElementById("custodianSubmitPanel");
         const donePanel   = document.getElementById("custodianDonePanel");
@@ -108,7 +126,7 @@ async function refreshCustodianShareCount() {
             badge.textContent = `${data.submittedCount} of 3 submitted`;
             badge.className = `share-count-badge${data.thresholdMet ? " threshold-met" : ""}`;
         }
-    } catch (_err) { /* non-fatal */ }
+    } catch (_err) {  }
 }
 
 async function handleCustodianSubmit() {
@@ -155,4 +173,3 @@ function escCHtml(v) {
 }
 
 initCustodianPage();
-

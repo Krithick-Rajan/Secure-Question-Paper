@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Users | Secure Question Paper</title>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js">
     <link rel="stylesheet" href="/css/design.css">
 </head>
 <body data-page="users">
@@ -14,59 +17,20 @@
         <div>
             <div class="eyebrow">USER MANAGEMENT</div>
             <h1>System users</h1>
-            <p>Create and manage setter, custodian, and print operator accounts. Assign each actor to their examination.</p>
+            <p>View active accounts and assign setter, custodian, and print operator users to examinations.</p>
         </div>
     </section>
-
-
-    <div class="portal-card">
-        <div class="portal-card-header">
-            <span class="card-label">CREATE NEW USER</span>
-        </div>
-        <div class="portal-card-body">
-            <div class="users-create-grid">
-
-                <div class="form-field">
-                    <label for="newUserEmail">Email address</label>
-                    <input type="email" id="newUserEmail" placeholder="setter@exam.com">
-                </div>
-
-                <div class="form-field">
-                    <label for="newUserPassword">Temporary password</label>
-                    <input type="password" id="newUserPassword" placeholder="Min 6 characters">
-                </div>
-
-                <div class="form-field">
-                    <label for="newUserDisplayName">Display name</label>
-                    <input type="text" id="newUserDisplayName" placeholder="e.g. Dr. Ramesh Kumar">
-                </div>
-
-                <div class="form-field">
-                    <label for="newUserRole">Role</label>
-                    <select id="newUserRole">
-                        <option value="setter">Question Setter</option>
-                        <option value="custodian">Custodian</option>
-                        <option value="print-operator">Print Operator</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
-
-            </div>
-
-            <div id="createUserMessage" class="form-message"></div>
-
-            <button class="primary-button" id="createUserButton" type="button">
-                <span>Create user</span>
-                <b>+</b>
-            </button>
-        </div>
-    </div>
-
 
     <div class="portal-card">
         <div class="portal-card-header">
             <span class="card-label">ALL USERS</span>
-            <button class="share-download-btn" id="refreshUsersButton" type="button">&#8635; Refresh</button>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <a href="/register.html" class="primary-button" style="text-decoration: none; padding: 7px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 8px;">
+                    <span>+ Register user</span>
+                    <b>&#8594;</b>
+                </a>
+                <button class="share-download-btn" id="refreshUsersButton" type="button">&#8635; Refresh</button>
+            </div>
         </div>
         <div id="usersListBody" class="portal-card-body">
             <div class="portal-loading">Loading users...</div>
@@ -107,7 +71,7 @@
 
             <div id="assignMessage" class="form-message"></div>
 
-            <button class="primary-button" id="assignButton" type="button">
+            <button class="primary-button" id="assignButton" type="button" style="align-self: flex-start; width: auto; min-width: 220px;">
                 <span>Assign to exam</span>
                 <b>&#8594;</b>
             </button>
@@ -120,6 +84,7 @@
 <script type="module" src="/js/auth.js"></script>
 <script type="module" src="/js/shell.js"></script>
 <script type="module" src="/js/users.js"></script>
+<script src="/js/spotlight.js"></script>
 
 </body>
 </html>

@@ -120,10 +120,10 @@ examForm?.addEventListener("submit", async event => {
     }
 
     if (
-        releaseTimeValue < startTime
+        releaseTimeValue > startTime
     ) {
         showMessage(
-            "Secure release time cannot be earlier than the examination start time.",
+            "Secure release time cannot be later than the examination start time.",
             "error"
         );
 
@@ -157,7 +157,7 @@ examForm?.addEventListener("submit", async event => {
         }
 
         const idToken =
-            await user.getIdToken(true);
+            await user.getIdToken();
 
         const releaseDateTime =
             `${examDateValue}T${releaseTimeValue}:00`;
@@ -292,22 +292,14 @@ function setSubmitting(
 
 async function loadExaminations() {
     try {
-        const auth =
-            window.firebaseAuth;
+        const token =
+            typeof window.getAuthToken === "function"
+                ? await window.getAuthToken()
+                : await window.firebaseAuth?.currentUser?.getIdToken();
 
-        if (!auth) {
+        if (!token) {
             return;
         }
-
-        const user =
-            auth.currentUser;
-
-        if (!user) {
-            return;
-        }
-
-        const idToken =
-            await user.getIdToken();
 
         const response =
             await fetch(
@@ -316,7 +308,7 @@ async function loadExaminations() {
                     method: "GET",
                     headers: {
                         "Authorization":
-                            `Bearer ${idToken}`
+                            `Bearer ${token}`
                     }
                 }
             );
@@ -336,7 +328,7 @@ async function loadExaminations() {
             result.examinations || []
         );
     } catch (_error) {
-        /* silently swallow load error */
+
     }
 }
 
@@ -632,40 +624,14 @@ function escapeHtml(
         );
 }
 
-function initializeExaminations() {
-    let attempts = 0;
-
-    const maxAttempts =
-        50;
-
-    const waitForAuth =
-        setInterval(
-            async () => {
-                attempts++;
-
-                if (
-                    window.firebaseAuth?.currentUser
-                ) {
-                    clearInterval(
-                        waitForAuth
-                    );
-
-                    await loadExaminations();
-
-                    return;
-                }
-
-                if (
-                    attempts >=
-                    maxAttempts
-                ) {
-                    clearInterval(
-                        waitForAuth
-                    );
-                }
-            },
-            200
-        );
+async function initializeExaminations() {
+    if (
+        window.authReady &&
+        typeof window.authReady.then === "function"
+    ) {
+        await window.authReady;
+    }
+    await loadExaminations();
 }
 
 initializeExaminations();

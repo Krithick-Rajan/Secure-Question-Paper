@@ -104,12 +104,10 @@ function createSidebar() {
 
             ${createNavigationItem("overview")}
             ${createNavigationItem("exams")}
-            ${createNavigationItem("custodians")}
-            ${createNavigationItem("fragments")}
             ${createNavigationItem("release")}
 
             <div class="navigation-heading second">
-                Security
+                Administration
             </div>
 
             ${createNavigationItem("security")}
@@ -133,7 +131,7 @@ function createSidebar() {
                     </strong>
 
                     <span>
-                        System access
+                        System access &middot; <a href="javascript:void(0)" onclick="window.logout()" style="color: #ff5252; text-decoration: none;">Sign out</a>
                     </span>
 
                 </div>
@@ -361,10 +359,15 @@ function getCurrentDate() {
 
 function initializeShell() {
     if (
+        document.getElementById(
+            "page-content"
+        )
+    ) {
+        createApplication();
+    } else if (
         document.readyState ===
         "loading"
     ) {
-
         document.addEventListener(
             "DOMContentLoaded",
             createApplication,
@@ -372,11 +375,8 @@ function initializeShell() {
                 once: true
             }
         );
-
     } else {
-
         createApplication();
-
     }
 }
 

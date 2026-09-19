@@ -6,15 +6,22 @@ let printAssignment = null;
 async function initPrintPage() {
     try {
         await window.authReady;
-        if (!window.firebaseAuth?.currentUser) { return; }
-        printToken = await window.firebaseAuth.currentUser.getIdToken();
-        const user = window.firebaseAuth.currentUser;
+        const token = typeof window.getAuthToken === "function"
+            ? await window.getAuthToken()
+            : await window.firebaseAuth?.currentUser?.getIdToken();
+        if (!token) { return; }
+        printToken = token;
+        let user = window.firebaseAuth?.currentUser || window.currentUserProfile;
+        if (!user || !user.email) {
+            const meRes = await fetch("/api/me", { headers: { Authorization: "Bearer " + token } }).then(r => r.json()).catch(() => ({}));
+            if (meRes && meRes.user) user = meRes.user;
+        }
         const a = document.getElementById('printAvatar');
         const n = document.getElementById('printName');
         const e = document.getElementById('printEmail');
-        if (a && user.email) a.textContent = user.email[0].toUpperCase();
-        if (n) n.textContent = user.displayName || 'Print Operator';
-        if (e) e.textContent = user.email || '';
+        if (a && user && user.email) a.textContent = user.email[0].toUpperCase();
+        if (n && user) n.textContent = user.displayName || user.name || 'Print Operator';
+        if (e && user) e.textContent = user.email || '';
         await loadPrintAssignment();
     } catch (_error) {
         showPrintError('Unable to load print portal: ' + _error.message);
@@ -58,7 +65,7 @@ async function loadPrintAssignment() {
                     </div>
                     <div class="portal-info-row">
                         <span>Print confirmed</span>
-                        <strong>${printConfirmed ? "&#10003; Confirmed" : "Not yet confirmed"}</strong>
+                        <strong>${printConfirmed ? "\u2713 Confirmed" : "Not yet confirmed"}</strong>
                     </div>
                 </div>
             `;
@@ -121,7 +128,7 @@ async function handleDownloadPacket() {
         a.click();
         URL.revokeObjectURL(url);
 
-        if (msgEl) { msgEl.textContent = "&#10003; Release packet downloaded. Transfer to air-gapped terminal."; msgEl.className = "form-message success"; }
+        if (msgEl) { msgEl.textContent = "\u2713 Release packet downloaded. Transfer to air-gapped terminal."; msgEl.className = "form-message success"; }
         if (btn) { btn.querySelector("span").textContent = "Download packet"; }
 
     } catch (_err) {
@@ -167,4 +174,3 @@ function escPHtml(v) {
 }
 
 initPrintPage();
-

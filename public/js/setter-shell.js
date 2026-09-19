@@ -40,6 +40,7 @@ function createSetterSidebar() {
                 <div class="administrator-info">
                     <strong id="setterName">Question Setter</strong>
                     <span id="setterEmail">setter@exam.com</span>
+                    <a href="javascript:void(0)" onclick="window.logout()" style="color: #ff5252; text-decoration: none; font-size: 11px;">Sign out</a>
                 </div>
 
                 <div class="administrator-status"></div>
@@ -128,7 +129,9 @@ function initSetterShell() {
     );
 }
 
-if (document.readyState === "loading") {
+if (document.getElementById("page-content")) {
+    initSetterShell();
+} else if (document.readyState === "loading") {
     document.addEventListener(
         "DOMContentLoaded",
         initSetterShell,

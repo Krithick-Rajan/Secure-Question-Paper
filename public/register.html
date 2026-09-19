@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | Secure Question Paper</title>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js">
+    <link rel="stylesheet" href="/css/login.css">
+    <style>
+        .role-selector-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 6px;
+        }
+        .role-card {
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: all 160ms ease;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .role-card:hover {
+            border-color: var(--border-bright);
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .role-card.selected {
+            border-color: var(--gold);
+            background: rgba(208, 170, 96, 0.08);
+        }
+        .role-card strong {
+            font-size: 13px;
+            color: var(--white);
+        }
+        .role-card span {
+            font-size: 11px;
+            color: var(--muted);
+        }
+        select.custom-select {
+            width: 100%;
+            height: 46px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0 14px;
+            color: var(--white);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 160ms;
+        }
+        select.custom-select:focus {
+            border-color: var(--gold);
+        }
+        .link-subrow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 18px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+        .link-subrow a {
+            color: var(--gold-bright);
+            text-decoration: none;
+            transition: opacity 160ms;
+        }
+        .link-subrow a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <main class="auth-page">
+
+        <section class="visual-side">
+
+            <div class="background-orb orb-one"></div>
+            <div class="background-orb orb-two"></div>
+
+            <header class="brand">
+                <div class="brand-icon">
+                    <span></span>
+                </div>
+                <div class="brand-copy">
+                    <div class="brand-name">Secure Question Paper</div>
+                    <div class="brand-description">Examination Security</div>
+                </div>
+            </header>
+
+            <div class="hero">
+                <div class="hero-kicker">Multi-Actor User Registration</div>
+                <h1>
+                    Controlled access.
+                    <span>Zero leaks.</span>
+                </h1>
+                <p>
+                    Register authorized actors across all security tiers. Every role has mathematically bounded permissions with zero full-paper plaintext exposure before release.
+                </p>
+
+                <div class="security-flow">
+                    <div class="flow-item active">
+                        <div class="flow-icon">01</div>
+                        <div>
+                            <strong>Question Setter</strong>
+                            <span>Uploads encrypted fragments</span>
+                        </div>
+                    </div>
+                    <div class="flow-connector"></div>
+                    <div class="flow-item">
+                        <div class="flow-icon">02</div>
+                        <div>
+                            <strong>Custodian</strong>
+                            <span>Holds Shamir 3-of-5 custody</span>
+                        </div>
+                    </div>
+                    <div class="flow-connector"></div>
+                    <div class="flow-item">
+                        <div class="flow-icon">03</div>
+                        <div>
+                            <strong>Print Operator</strong>
+                            <span>Air-gapped printing handoff</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="visual-footer">
+                <div class="footer-status">
+                    <span class="status-light"></span>
+                    Registration portal operational
+                </div>
+                <div>Secure Question Paper</div>
+            </div>
+
+        </section>
+
+        <section class="form-side">
+
+            <div class="form-wrapper">
+
+                <div class="form-top">
+                    <div class="form-kicker">New User Registration</div>
+                    <h2>Create an account</h2>
+                    <p>Register a new system user and assign their access role.</p>
+                </div>
+
+                <form id="registerForm">
+
+                    <div class="input-group">
+                        <label for="regDisplayName">Full name / Display name</label>
+                        <div class="input-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <input id="regDisplayName" type="text" placeholder="e.g. Dr. Ramesh Kumar" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="regEmail">Email address</label>
+                        <div class="input-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                                <path d="M3 7l9 6 9-6"></path>
+                            </svg>
+                            <input id="regEmail" type="email" placeholder="name@institution.com" autocomplete="username" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="regPassword">Password</label>
+                        <div class="input-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <rect x="5" y="10" width="14" height="10" rx="2"></rect>
+                                <path d="M8 10V7a4 4 0 018 0v3"></path>
+                            </svg>
+                            <input id="regPassword" type="password" placeholder="Minimum 6 characters" autocomplete="new-password" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="regRole">Select System Role</label>
+                        <select id="regRole" class="custom-select" required>
+                            <option value="setter">Question Setter (Uploads Encrypted Fragments)</option>
+                            <option value="custodian">Custodian (Holds Shamir 3-of-5 Share)</option>
+                            <option value="print-operator">Print Operator (Physical Print Verification)</option>
+                            <option value="admin">Administrator (Security & Release Governance)</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="submit-button" id="regSubmitButton">
+                        <span>Register account</span>
+                        <span class="submit-arrow">↗</span>
+                    </button>
+
+                    <div id="regMessage" class="login-message"></div>
+
+                </form>
+
+                <div class="link-subrow">
+                    <span>Already have an account? <a href="/login.html">Sign in here</a></span>
+                    <a href="/users.html">User Management &rarr;</a>
+                </div>
+
+                <div class="protected-area" style="margin-top: 24px;">
+                    <div class="protected-icon">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M12 3l7 3v5c0 4.2-2.7 7.7-7 10-4.3-2.3-7-5.8-7-10V6l7-3z"></path>
+                            <path d="M9 12l2 2 4-4"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <strong>Cryptographically Isolated Roles</strong>
+                        <span>Role claims are synchronized with Firebase Authentication and Firestore.</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <footer class="form-footer">
+                <span>Secure Question Paper</span>
+                <span>v1.0</span>
+            </footer>
+
+        </section>
+
+    </main>
+
+    <script type="module" src="/js/register.js"></script>
+    <script src="/js/spotlight.js"></script>
+
+</body>
+</html>

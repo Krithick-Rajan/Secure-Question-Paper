@@ -21,6 +21,7 @@ function createCustodianSidebar() {
                 <div class="administrator-info">
                     <strong id="custodianName">Custodian</strong>
                     <span id="custodianEmail">custodian@exam.com</span>
+                    <a href="javascript:void(0)" onclick="window.logout()" style="color: #ff5252; text-decoration: none; font-size: 11px;">Sign out</a>
                 </div>
                 <div class="administrator-status"></div>
             </div>
@@ -62,7 +63,9 @@ function initCustodianShell() {
     document.dispatchEvent(new CustomEvent("secureCustodyShellReady"));
 }
 
-if (document.readyState === "loading") {
+if (document.getElementById("page-content")) {
+    initCustodianShell();
+} else if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initCustodianShell, { once: true });
 } else {
     initCustodianShell();
