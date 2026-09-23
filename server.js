@@ -18,7 +18,20 @@ const { createReleaseAgent, validateReleaseAuthorization, createReleasePackage, 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 
-app.use(cors());
+const allowedOrigins = (process.env.CORS_ORIGINS || "")
+    .split(",")
+    .map(origin => origin.trim())
+    .filter(Boolean);
+app.use(cors({
+    origin(origin, callback) {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.length === 0) {
+            const isLocal = /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/i.test(origin);
+            return callback(isLocal ? null : new Error("Origin not allowed by CORS"), isLocal);
+        }
+        return callback(allowedOrigins.includes(origin) ? null : new Error("Origin not allowed by CORS"), allowedOrigins.includes(origin));
+    }
+}));
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
@@ -489,7 +502,7 @@ app.get("/api/health", (_req, res) => {
     });
 });
 
-app.get("/api/test-firestore", async (_req, res) => {
+app.get("/api/test-firestore", verifyToken, requireRole("admin"), async (_req, res) => {
     try {
         const testRef = db.collection("system").doc("ping");
         await testRef.set({ lastPing: new Date(), status: "connected" });
@@ -1323,6 +1336,12 @@ app.post("/api/release/execute", verifyToken, requireRole("admin"), async (req, 
         const custodyVerified = examinationData.custodyStatus === "initialized";
         const fragmentsReady = fragments.length > 0;
         const mpcVerified = examinationData.security?.mpc?.status === "verified";
+        const vdfState = await verifyVdfState(
+            examinationData,
+            examinationId,
+            examinationData.security?.mpc?.manifestHash || ""
+        );
+        const vdfVerified = vdfState.verified === true;
         const canaryClear = examinationData.security?.canaryStatus !== "TRIGGERED";
         const timeGateOpen = releaseTime ? isReleaseTimeReached(releaseTime) : false;
         const authorized = release.authorized === true;
@@ -1332,6 +1351,7 @@ app.post("/api/release/execute", verifyToken, requireRole("admin"), async (req, 
             releaseTimeReached: timeGateOpen,
             custodyVerified,
             mpcVerified,
+            vdfVerified,
             fragmentsReady,
             canaryClear
         });
@@ -1392,11 +1412,12 @@ app.post("/api/release/execute", verifyToken, requireRole("admin"), async (req, 
             examinationCode: examinationData.code || null,
             title: examinationData.title || examinationData.name || null,
             subject: examinationData.subject || null,
-            assembledPaper,
             totalFragments: decryptedFragments.length,
             releasedAt: executionTime,
             printHandoffId: printHandoff.handoffId,
-            authorizedBy: req.user.uid
+            authorizedBy: req.user.uid,
+            plaintextPersisted: false,
+            deliveryMode: "on-demand-decrypt"
         };
 
         await db.collection("examinations").doc(examinationId).update({
@@ -1538,7 +1559,7 @@ app.post("/api/admin/users/create", verifyToken, requireRole("admin"), async (re
     }
 });
 
-app.post("/api/register", async (req, res) => {
+app.post("/api/register", verifyToken, requireRole("admin"), async (req, res) => {
     try {
         const { email, password, role, displayName } = req.body;
         if (!email || !password || !role) {
@@ -1550,31 +1571,6 @@ app.post("/api/register", async (req, res) => {
         }
         if (password.length < 6) {
             return res.status(400).json({ success: false, message: "Password must be at least 6 characters long." });
-        }
-
-        if (role === "admin") {
-            const authHeader = req.headers.authorization;
-            let isAdminAuthorized = false;
-            if (authHeader && authHeader.startsWith("Bearer ")) {
-                try {
-                    const token = authHeader.split("Bearer ")[1];
-                    const decoded = await firebaseAuth.verifyIdToken(token);
-                    if (decoded.role === "admin") {
-                        isAdminAuthorized = true;
-                    } else {
-                        const userDoc = await db.collection("users").doc(decoded.uid).get();
-                        if (userDoc.exists && userDoc.data().role === "admin") {
-                            isAdminAuthorized = true;
-                        }
-                    }
-                } catch (_authErr) {}
-            }
-            if (!isAdminAuthorized) {
-                return res.status(403).json({
-                    success: false,
-                    message: "Registering an administrator account requires authorization from an active administrator."
-                });
-            }
         }
 
         const userRecord = await firebaseAuth.createUser({
@@ -1596,6 +1592,7 @@ app.post("/api/register", async (req, res) => {
             targetUid: userRecord.uid,
             targetEmail: email,
             assignedRole: role,
+            createdBy: req.user.uid,
             timestamp: new Date()
         });
 
@@ -2101,21 +2098,55 @@ app.get("/api/print-operator/release-packet/:examinationId", verifyToken, requir
         }
 
         const releasePacket = data.releasePacket || null;
-        if (!releasePacket) {
-            return res.status(404).json({ success: false, message: "Release packet not found. Execute release first." });
+        if (!releasePacket) return res.status(404).json({ success: false, message: "Release packet not found. Execute release first." });
+
+        const fragments = await getFragments(examinationId);
+        const reconstructed = await reconstructExaminationKey(examinationId, 3);
+        const examinationKey = reconstructed.key;
+        const decryptedFragments = [];
+
+        for (const currentFragment of fragments.filter(f => !f.isDecoy)) {
+            const plaintext = decryptFragment(
+                {
+                    ciphertext: currentFragment.ciphertext,
+                    iv: currentFragment.iv,
+                    authTag: currentFragment.authTag
+                },
+                examinationKey
+            );
+
+            decryptedFragments.push({
+                fragmentNumber: Number(currentFragment.fragmentNumber),
+                fragmentLabel: currentFragment.fragmentLabel || "Protected Fragment",
+                plaintext
+            });
         }
+
+        const assembledPaper = decryptedFragments
+            .sort((a, b) => a.fragmentNumber - b.fragmentNumber)
+            .map(f => `SECTION ${f.fragmentNumber}: ${f.fragmentLabel}\n\n${f.plaintext}`)
+            .join("\n\n----------------------------------------\n\n");
+
+        const deliveryPacket = {
+            ...releasePacket,
+            assembledPaper,
+            totalFragments: decryptedFragments.length,
+            plaintextPersisted: false,
+            deliveryMode: "on-demand-decrypt"
+        };
 
         await db.collection("audit_logs").add({
             action: "RELEASE_PACKET_DOWNLOADED",
             examinationId,
             downloadedBy: uid,
             downloadedByEmail: req.user.email || null,
+            plaintextPersisted: false,
             timestamp: new Date()
         });
 
         return res.json({
             success: true,
-            releasePacket,
+            releasePacket: deliveryPacket,
             examinationCode: data.code,
             releasedAt: data.releasedAt
         });

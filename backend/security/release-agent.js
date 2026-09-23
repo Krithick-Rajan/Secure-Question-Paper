@@ -30,12 +30,13 @@ function createReleaseAgent({ examinationId, examinationCode, releaseAt }) {
     };
 }
 
-function validateReleaseAuthorization({ authorized, releaseTimeReached, custodyVerified, mpcVerified, fragmentsReady, canaryClear }) {
+function validateReleaseAuthorization({ authorized, releaseTimeReached, custodyVerified, mpcVerified, vdfVerified, fragmentsReady, canaryClear }) {
     const checks = {
         authorization: Boolean(authorized),
         timeGate: Boolean(releaseTimeReached),
         thresholdCustody: Boolean(custodyVerified),
         mpcManifest: Boolean(mpcVerified),
+        vdfProof: Boolean(vdfVerified),
         encryptedFragments: Boolean(fragmentsReady),
         canaryStatus: Boolean(canaryClear)
     };

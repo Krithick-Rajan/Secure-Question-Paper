@@ -7,7 +7,7 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "build": "node --check server.js",
-    "test": "node --check server.js"
+    "test": "node tests/security-regression.test.js"
   },
   "engines": {
     "node": ">=20 <25"

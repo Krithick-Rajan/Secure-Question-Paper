@@ -13,6 +13,7 @@ Web application for managing examination question fragments, role-based access, 
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Running the application](#running-the-application)
+- [Demo accounts](#demo-accounts)
 - [Validation](#validation)
 - [Application workflow](#application-workflow)
 - [API overview](#api-overview)
@@ -48,7 +49,7 @@ Express server (server.js) ---- Firebase Authentication
           - canary checks
 ```
 
-Question fragments are encrypted before being stored. The server reconstructs an examination key only during its release flow after its configured authorization, time, custody, manifest, and canary checks pass.
+Question fragments are encrypted before being stored. The server reconstructs an examination key only during its release flow after its configured authorization, time, custody, manifest, and canary checks pass. The released plaintext paper is generated only for the assigned print operator's authenticated download response; it is not stored in Firestore as `assembledPaper`.
 
 ## Roles
 
@@ -88,6 +89,8 @@ PORT=5000
 FRAGMENT_ENCRYPTION_KEY=replace-with-a-long-random-secret
 # Optional; defaults to 10000 in the current implementation.
 VDF_ITERATIONS=10000
+# Comma-separated production origins. If omitted, only localhost/127.0.0.1 origins are allowed.
+CORS_ORIGINS=http://localhost:5000,https://your-vercel-app.vercel.app
 ```
 
 Provide Firebase Admin credentials by using **one** of these methods:
@@ -116,20 +119,31 @@ npm run dev
 
 Open [http://localhost:5000](http://localhost:5000). The health endpoint is available at [http://localhost:5000/api/health](http://localhost:5000/api/health).
 
+## Demo accounts
+
+Use these seeded/demo accounts only for project demonstration. Rotate or remove these passwords before public deployment.
+
+| Role | User ID | Password | Display name |
+| --- | --- | --- | --- |
+| Administrator | `admin@test.com` | `Admin@12345` | Admin |
+| Setter | `setter@test.com` | `setter@12345` | Srii |
+| Custodian | `custody@test.com` | `custody@12345` | Krithick |
+| Print operator | `print@test.com` | `print@12345` | Reshmi |
+
 ## Validation
 
 ```bash
 # Syntax check for server.js
 npm run build
 
-# Currently identical to the syntax check; not a functional test suite
+# Security regression checks for release storage, CORS, registration, and diagnostics
 npm test
 
 # Dependency vulnerability audit
 npm audit --omit=dev
 ```
 
-At the time this README was updated, `npm run build`, `npm test`, and `npm audit --omit=dev` completed successfully. The repository has no automated integration or end-to-end test suite yet.
+At the time this README was updated, `npm run build`, `npm test`, and `npm audit --omit=dev` completed successfully.
 
 ## Application workflow
 
@@ -142,7 +156,7 @@ At the time this README was updated, `npm run build`, `npm test`, and `npm audit
 
 ## API overview
 
-All endpoints except the health check, registration route, and current Firestore diagnostic route require a Firebase ID token:
+All endpoints except the health check require a Firebase ID token:
 
 ```http
 Authorization: Bearer <Firebase-ID-token>
@@ -182,15 +196,13 @@ secure-question-paper/
 
 Do these before exposing the project publicly or using it beyond a demo:
 
-- **Do not persist plaintext release material.** The current `POST /api/release/execute` flow writes `assembledPaper` into Firestore as `releasePacket`, and the print portal downloads that packet. This contradicts any claim of memory-only release. Replace it with a dedicated, short-lived, authenticated handoff to a hardened print service; never store or browser-download plaintext.
-- **Remove or protect `GET /api/test-firestore`.** It is currently public and performs a Firestore write.
-- **Close self-service operational-account registration.** `POST /api/register` currently allows unauthenticated creation of `setter`, `custodian`, and `print-operator` accounts. Restrict provisioning to administrators or an invitation workflow.
-- **Restrict CORS.** `app.use(cors())` accepts all origins. Allow only the production origin(s) and required methods/headers.
+- **Use a hardened print handoff for real production.** The app no longer stores `assembledPaper` in Firestore; it decrypts on demand for the assigned print operator. For live examinations, replace browser download with a short-lived, audited handoff to a hardened print service.
+- **Set production CORS origins.** Configure `CORS_ORIGINS` to the exact deployed frontend origin(s).
 - **Fail closed when `FRAGMENT_ENCRYPTION_KEY` is missing.** The current development fallback must be removed for deployed environments.
 - **Treat the VDF accurately.** Current release timing is enforced by a server clock check; the VDF proof does not independently prevent someone from computing ahead of time. Use a proven time-lock design and independently verifiable timing source if that property is required.
 - **Scope data by assignment.** Review endpoints such as metrics and fragment listing to ensure every role sees only data needed for its assigned examinations.
 - **Add operational hardening.** Use rate limiting, CSRF protections where relevant, secure headers, structured logging, monitoring, backups, Firestore security rules, secret rotation, and a threat-model review.
-- **Add tests.** Unit-test cryptographic helpers and authorization rules; add integration tests for every role and negative release path.
+- **Add deeper tests.** The repository includes security regression checks. Add full integration/end-to-end tests for every role and negative release path.
 - **Commission an independent security review.** Cryptographic and high-stakes exam systems require professional design and penetration testing before production use.
 
 ## Troubleshooting
