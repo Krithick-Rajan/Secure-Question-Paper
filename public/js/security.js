@@ -141,7 +141,7 @@ async function securityApiRequest(url) {
         }
     });
 
-    const data = await response.json();
+    const data = await parseSecurityJson(response);
 
     if (!response.ok) {
         throw new Error(
@@ -150,6 +150,20 @@ async function securityApiRequest(url) {
     }
 
     return data;
+}
+
+async function parseSecurityJson(response) {
+    const contentType = response.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+        return response.json();
+    }
+
+    const text = await response.text();
+    const message = text.includes("<!DOCTYPE")
+        ? "Server returned an HTML error page. Check deployment environment variables and API routing."
+        : text.slice(0, 300);
+
+    throw new Error(message || "Server returned a non-JSON response.");
 }
 
 async function loadSecurityExaminations() {
@@ -557,7 +571,7 @@ function renderSecurityPage() {
                     },
                     body: JSON.stringify({ examinationId: securitySelectedId })
                 });
-                const data = await response.json();
+                const data = await parseSecurityJson(response);
                 if (data.success) {
                     alert("Cryptographic security initialized successfully! MPC manifest and VDF time-lock verified.");
                     await loadSecurityStatus();

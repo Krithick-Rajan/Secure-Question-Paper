@@ -26,8 +26,10 @@ app.use(cors({
     origin(origin, callback) {
         if (!origin) return callback(null, true);
         if (allowedOrigins.length === 0) {
-            const isLocal = /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/i.test(origin);
-            return callback(isLocal ? null : new Error("Origin not allowed by CORS"), isLocal);
+            const isDefaultAllowed =
+                /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/i.test(origin) ||
+                /^https:\/\/[a-z0-9-]+(?:-[a-z0-9-]+)*\.vercel\.app$/i.test(origin);
+            return callback(isDefaultAllowed ? null : new Error("Origin not allowed by CORS"), isDefaultAllowed);
         }
         return callback(allowedOrigins.includes(origin) ? null : new Error("Origin not allowed by CORS"), allowedOrigins.includes(origin));
     }
