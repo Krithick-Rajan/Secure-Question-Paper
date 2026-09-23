@@ -58,3 +58,14 @@ test("release execution requires a verified VDF proof", () => {
     assert.match(executeRoute, /const vdfVerified = vdfState\.verified === true/);
     assert.match(executeRoute, /vdfVerified,/);
 });
+
+test("security status exposes normalized custody and canary fields", () => {
+    const statusRoute = server.slice(
+        server.indexOf('app.get("/api/security/status/:examinationId"'),
+        server.indexOf('app.get("/api/release/status/:examinationId"')
+    );
+    assert.match(statusRoute, /verified:\s*custodyVerified/);
+    assert.match(statusRoute, /fingerprintVerified:\s*custodyVerified/);
+    assert.match(statusRoute, /const canaryStatus = data\.security\?\.canaryStatus === "TRIGGERED" \? "TRIGGERED" : "CLEAR"/);
+    assert.match(statusRoute, /triggered:\s*canaryStatus === "TRIGGERED"/);
+});

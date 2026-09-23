@@ -1159,7 +1159,9 @@ app.get("/api/security/status/:examinationId", verifyToken, requireRole("admin")
         const fragmentState = await getFragmentState(examinationId);
 
         const custodyFingerprint = data.custody?.keyFingerprint || null;
-        const custodyVerified = data.custody?.fingerprintVerified === true;
+        const custodyInitialized = data.custodyStatus === "initialized";
+        const custodyVerified = custodyInitialized && data.custody?.fingerprintVerified !== false;
+        const canaryStatus = data.security?.canaryStatus === "TRIGGERED" ? "TRIGGERED" : "CLEAR";
 
         let mpcStatus = { configured: false, verified: false };
         if (data.security?.mpc?.manifestHash) {
@@ -1181,9 +1183,13 @@ app.get("/api/security/status/:examinationId", verifyToken, requireRole("admin")
                 examinationId,
                 examinationCode: data.code,
                 custody: {
-                    initialized: data.custodyStatus === "initialized",
+                    initialized: custodyInitialized,
+                    verified: custodyVerified,
                     fingerprintVerified: custodyVerified,
-                    keyFingerprint: custodyFingerprint
+                    keyFingerprint: custodyFingerprint,
+                    verificationStatus: custodyVerified ? "verified" : "pending",
+                    thresholdRequired: data.custody?.thresholdRequired || 3,
+                    totalShares: data.custody?.totalShares || 5
                 },
                 fragments: fragmentState,
                 mpc: {
@@ -1207,7 +1213,10 @@ app.get("/api/security/status/:examinationId", verifyToken, requireRole("admin")
                     N_id: data.security?.vdf?.N_id || vdfStatus.N_id || "RSA-2048-challenge"
                 },
                 canary: {
-                    status: data.security?.canaryStatus || "CLEAR"
+                    status: canaryStatus,
+                    triggered: canaryStatus === "TRIGGERED",
+                    lastCanaryId: data.security?.lastCanaryId || null,
+                    triggeredAt: data.security?.canaryTriggeredAt || null
                 }
             }
         });
