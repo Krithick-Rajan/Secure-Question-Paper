@@ -4598,6 +4598,10 @@ body.modal-open {
     color: var(--text);
 }
 
+.canary-alert-banner[hidden] {
+    display: none !important;
+}
+
 .canary-alert-icon {
     flex: 0 0 28px;
     width: 28px;

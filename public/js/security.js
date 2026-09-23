@@ -672,6 +672,7 @@ function renderSecurityStatus(security) {
 
     if (banner) {
         banner.hidden = !canaryTriggered;
+        banner.style.display = canaryTriggered ? "" : "none";
     }
 
     const mpcConfigured = mpc.configured === true;
@@ -876,6 +877,7 @@ function clearSecurityPanel() {
 
     if (banner) {
         banner.hidden = true;
+        banner.style.display = "none";
     }
 }
 
