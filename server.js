@@ -2096,12 +2096,15 @@ app.get("/api/print-operator/my-assignment", verifyToken, requireRole("print-ope
     try {
         const uid = req.user.uid;
         const userEmail = (req.user.email || "").toLowerCase();
+        const requestedExamId = req.query.examinationId;
         const snapshot = await db.collection("examinations").get();
-        let assignment = null;
+        const assignments = [];
+
         for (const doc of snapshot.docs) {
             const data = doc.data();
             if (data.printOperator && (data.printOperator.uid === uid || (data.printOperator.email && data.printOperator.email.toLowerCase() === userEmail))) {
-                assignment = {
+                const createdAtMs = data.createdAt ? (data.createdAt._seconds ? data.createdAt._seconds * 1000 : new Date(data.createdAt).getTime()) : 0;
+                assignments.push({
                     examinationId: doc.id,
                     examinationCode: data.code,
                     examinationName: data.name || data.title,
@@ -2110,11 +2113,29 @@ app.get("/api/print-operator/my-assignment", verifyToken, requireRole("print-ope
                     releaseTime: data.release?.releaseTime || data.releaseTime || null,
                     releaseExecuted: data.releaseStatus === "released",
                     printConfirmed: data.printConfirmed || false,
-                    printConfirmedAt: data.printConfirmedAt || null
-                };
-                break;
+                    printConfirmedAt: data.printConfirmedAt || null,
+                    createdAt: createdAtMs
+                });
             }
         }
+
+        // Prioritize: unprinted examinations first, then released, then most recent
+        assignments.sort((a, b) => {
+            if (!a.printConfirmed && b.printConfirmed) return -1;
+            if (a.printConfirmed && !b.printConfirmed) return 1;
+            if (a.releaseExecuted && !b.releaseExecuted) return -1;
+            if (!a.releaseExecuted && b.releaseExecuted) return 1;
+            return b.createdAt - a.createdAt;
+        });
+
+        let assignment = null;
+        if (requestedExamId) {
+            assignment = assignments.find(a => a.examinationId === requestedExamId) || null;
+        }
+        if (!assignment) {
+            assignment = assignments[0] || null;
+        }
+
         if (!assignment && !snapshot.empty) {
             const firstExamDoc = snapshot.docs[0];
             const firstExamData = firstExamDoc.data();
@@ -2136,8 +2157,10 @@ app.get("/api/print-operator/my-assignment", verifyToken, requireRole("print-ope
                 printConfirmed: firstExamData.printConfirmed || false,
                 printConfirmedAt: firstExamData.printConfirmedAt || null
             };
+            assignments.push(assignment);
         }
-        return res.json({ success: true, assignment });
+
+        return res.json({ success: true, assignment, assignments });
     } catch (_error) {
         return res.status(500).json({ success: false, message: "Failed to load assignment." });
     }

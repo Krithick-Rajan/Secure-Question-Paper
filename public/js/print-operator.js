@@ -28,12 +28,20 @@ async function initPrintPage() {
     }
 }
 
-async function loadPrintAssignment() {
+async function loadPrintAssignment(targetExamId = null) {
     const bodyEl  = document.getElementById("printAssignmentBody");
     const badgeEl = document.getElementById("printStatusBadge");
+    const donePanel = document.getElementById("printDonePanel");
+    const actionPanel = document.getElementById("printActionPanel");
+
+    if (donePanel) donePanel.style.display = "none";
+    if (actionPanel) actionPanel.style.display = "none";
 
     try {
-        const res  = await fetch("/api/print-operator/my-assignment", {
+        const url = targetExamId 
+            ? `/api/print-operator/my-assignment?examinationId=${encodeURIComponent(targetExamId)}`
+            : "/api/print-operator/my-assignment";
+        const res  = await fetch(url, {
             headers: { Authorization: `Bearer ${printToken}` }
         });
         const data = await res.json();
@@ -48,8 +56,22 @@ async function loadPrintAssignment() {
         printAssignment = data.assignment;
         const { examinationCode, examinationName, releaseStatus, releaseTime, releaseExecuted, printConfirmed } = data.assignment;
 
+        const allAssignments = data.assignments || [data.assignment];
+        let selectorHtml = "";
+        if (allAssignments.length > 1) {
+            selectorHtml = `
+                <div class="portal-info-row" style="margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.08));">
+                    <span style="font-weight: 600; color: var(--gold-bright, #d0aa60);">Switch Examination</span>
+                    <select id="printExamSelector" style="background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 6px 12px; font-size: 13px; outline: none; cursor: pointer;">
+                        ${allAssignments.map(a => `<option value="${a.examinationId}" ${a.examinationId === printAssignment.examinationId ? "selected" : ""}>${escPHtml(a.examinationCode)} — ${escPHtml(a.examinationName || "")} (${a.printConfirmed ? "Printed" : a.releaseExecuted ? "Released" : "Pending"})</option>`).join("")}
+                    </select>
+                </div>
+            `;
+        }
+
         if (bodyEl) {
             bodyEl.innerHTML = `
+                ${selectorHtml}
                 <div class="portal-info-grid">
                     <div class="portal-info-row">
                         <span>Examination</span>
@@ -69,34 +91,41 @@ async function loadPrintAssignment() {
                     </div>
                 </div>
             `;
+
+            const selectorEl = document.getElementById("printExamSelector");
+            if (selectorEl) {
+                selectorEl.addEventListener("change", (e) => {
+                    loadPrintAssignment(e.target.value);
+                });
+            }
         }
 
         if (badgeEl) {
-            badgeEl.textContent = releaseExecuted ? "RELEASED" : "PENDING";
-            badgeEl.className = `security-module-badge ${releaseExecuted ? "badge-pass" : "badge-warn"}`;
+            badgeEl.textContent = printConfirmed ? "PRINT CONFIRMED" : releaseExecuted ? "RELEASED" : "PENDING";
+            badgeEl.className = `security-module-badge ${printConfirmed ? "badge-pass" : releaseExecuted ? "badge-pass" : "badge-warn"}`;
         }
 
         if (printConfirmed) {
-            const donePanel = document.getElementById("printDonePanel");
             if (donePanel) donePanel.style.display = "";
             return;
         }
 
-        const actionPanel = document.getElementById("printActionPanel");
         if (actionPanel) actionPanel.style.display = "";
 
         const dlBtn = document.getElementById("downloadPacketButton");
         if (releaseExecuted && dlBtn) {
             dlBtn.disabled = false;
-            dlBtn.addEventListener("click", handleDownloadPacket);
+            dlBtn.onclick = handleDownloadPacket;
         } else if (dlBtn) {
+            dlBtn.disabled = true;
             dlBtn.title = "Release has not been executed yet.";
         }
 
         const confirmRow = document.getElementById("confirmPrintRow");
         if (releaseExecuted && confirmRow) {
             confirmRow.style.display = "";
-            document.getElementById("confirmPrintButton")?.addEventListener("click", handleConfirmPrint);
+            const confirmBtn = document.getElementById("confirmPrintButton");
+            if (confirmBtn) confirmBtn.onclick = handleConfirmPrint;
         }
 
     } catch (_err) {
