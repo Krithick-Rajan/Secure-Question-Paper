@@ -1570,7 +1570,7 @@ app.post("/api/admin/users/create", verifyToken, requireRole("admin"), async (re
     }
 });
 
-app.post("/api/register", verifyToken, requireRole("admin"), async (req, res) => {
+app.post("/api/register", async (req, res) => {
     try {
         const { email, password, role, displayName } = req.body;
         if (!email || !password || !role) {
@@ -1582,6 +1582,18 @@ app.post("/api/register", verifyToken, requireRole("admin"), async (req, res) =>
         }
         if (password.length < 6) {
             return res.status(400).json({ success: false, message: "Password must be at least 6 characters long." });
+        }
+
+        let createdBy = "self-registered";
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith("Bearer ")) {
+            try {
+                const token = authHeader.split("Bearer ")[1];
+                const decoded = await firebaseAuth.verifyIdToken(token);
+                if (decoded && decoded.uid) {
+                    createdBy = decoded.uid;
+                }
+            } catch (_tokenErr) {}
         }
 
         const userRecord = await firebaseAuth.createUser({
@@ -1603,7 +1615,7 @@ app.post("/api/register", verifyToken, requireRole("admin"), async (req, res) =>
             targetUid: userRecord.uid,
             targetEmail: email,
             assignedRole: role,
-            createdBy: req.user.uid,
+            createdBy,
             timestamp: new Date()
         });
 

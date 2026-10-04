@@ -203,6 +203,10 @@ onAuthStateChanged(
             sessionStorage.setItem("sqp_user_role", role);
             sessionStorage.setItem("sqp_user_email", result.user.email || "");
             sessionStorage.setItem("sqp_user_uid", result.user.uid || "");
+            sessionStorage.setItem("sqp_id_token", token);
+            if (role === "admin") {
+                sessionStorage.setItem("sqp_admin_token", token);
+            }
 
             if (
                 requiredRole &&
@@ -278,6 +282,8 @@ window.logout = async function () {
         sessionStorage.removeItem("sqp_user_role");
         sessionStorage.removeItem("sqp_user_email");
         sessionStorage.removeItem("sqp_user_uid");
+        sessionStorage.removeItem("sqp_id_token");
+        sessionStorage.removeItem("sqp_admin_token");
         await signOut(auth);
     } catch (_err) {
 

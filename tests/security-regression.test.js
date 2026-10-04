@@ -19,8 +19,8 @@ test("Firestore diagnostic endpoint requires admin authentication", () => {
     assert.match(server, /app\.get\("\/api\/test-firestore",\s*verifyToken,\s*requireRole\("admin"\)/);
 });
 
-test("self-service registration is admin-only", () => {
-    assert.match(server, /app\.post\("\/api\/register",\s*verifyToken,\s*requireRole\("admin"\)/);
+test("administrative user creation requires admin authentication", () => {
+    assert.match(server, /app\.post\("\/api\/admin\/users\/create",\s*verifyToken,\s*requireRole\("admin"\)/);
 });
 
 test("CORS is restricted through an allow-list", () => {

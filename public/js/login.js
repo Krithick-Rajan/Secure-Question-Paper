@@ -53,9 +53,9 @@ loginForm.addEventListener("submit", async (event) => {
         const tokenResult = await user.getIdTokenResult(false);
         let role = tokenResult.claims?.role;
 
+        const idToken = await user.getIdToken(false);
         // Fallback to /api/me only if custom claim was not found in JWT
         if (!role) {
-            const idToken = await user.getIdToken(false);
             const response = await fetch("/api/me", {
                 method: "GET",
                 headers: { "Authorization": `Bearer ${idToken}` }
@@ -70,6 +70,10 @@ loginForm.addEventListener("submit", async (event) => {
             sessionStorage.setItem("sqp_user_role", role);
             sessionStorage.setItem("sqp_user_email", email);
             sessionStorage.setItem("sqp_user_uid", user.uid);
+            sessionStorage.setItem("sqp_id_token", idToken);
+            if (role === "admin") {
+                sessionStorage.setItem("sqp_admin_token", idToken);
+            }
             message.textContent = "Redirecting...";
             window.location.href = destination;
         } else {
