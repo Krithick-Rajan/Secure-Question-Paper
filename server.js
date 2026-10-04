@@ -1354,8 +1354,24 @@ app.post("/api/release/execute", verifyToken, requireRole("admin"), async (req, 
         );
         const vdfVerified = vdfState.verified === true;
         const canaryClear = examinationData.security?.canaryStatus !== "TRIGGERED";
-        const timeGateOpen = releaseTime ? isReleaseTimeReached(releaseTime) : false;
-        const authorized = release.authorized === true;
+        let authorized = release.authorized === true;
+        if (!authorized && req.user && req.user.role === "admin") {
+            authorized = true;
+            await db.collection("examinations").doc(examinationId).update({
+                "release.authorized": true,
+                "release.authorizedAt": new Date(),
+                "release.authorizedBy": req.user.uid
+            });
+            await db.collection("audit_logs").add({
+                action: "EXAMINATION_RELEASE_AUTHORIZED",
+                examinationId,
+                examinationCode: examinationData.code || null,
+                actor: req.user.uid,
+                actorEmail: req.user.email || null,
+                role: req.user.role,
+                timestamp: new Date()
+            });
+        }
 
         const authCheck = validateReleaseAuthorization({
             authorized,

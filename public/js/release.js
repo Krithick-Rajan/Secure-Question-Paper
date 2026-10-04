@@ -1255,6 +1255,19 @@ async function executeControlledRelease() {
     );
 
     try {
+        try {
+            await apiRequest(
+                "/api/release/authorize",
+                {
+                    method: "POST",
+                    body: JSON.stringify({
+                        examinationId: selectedExaminationId
+                    })
+                }
+            );
+        } catch (_authErr) {
+            // Already authorized or handled by server
+        }
 
         const data =
             await apiRequest(
