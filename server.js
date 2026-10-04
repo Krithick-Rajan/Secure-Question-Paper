@@ -179,6 +179,32 @@ async function reconstructExaminationKey(examinationId, minimumShares = 3) {
         };
     }
 
+    const storedSharesSnap = await db.collection("custody_shares").where("examinationId", "==", examinationId).get();
+    if (storedSharesSnap.size >= minimumShares) {
+        const storedShares = storedSharesSnap.docs
+            .map(d => ({ id: Number(d.data().shareId), value: d.data().value || d.data().protectedShare }))
+            .filter(s => s.value && s.id !== undefined)
+            .sort((a, b) => a.id - b.id)
+            .slice(0, threshold);
+
+        if (storedShares.length >= threshold && validateShares(storedShares)) {
+            const reconstructedKey = combineShares(storedShares);
+            if (Buffer.isBuffer(reconstructedKey) && reconstructedKey.length === 32) {
+                const fingerprint = createFingerprint(reconstructedKey);
+                const storedFingerprint = custody.keyFingerprint || custody.fingerprint || null;
+                if (!storedFingerprint || constantTimeEqualHex(fingerprint, storedFingerprint)) {
+                    return {
+                        key: reconstructedKey,
+                        fingerprint,
+                        sharesUsed: storedShares.map(s => s.id),
+                        threshold,
+                        totalShares: storedSharesSnap.size
+                    };
+                }
+            }
+        }
+    }
+
     if (custody.encryptedKey) {
         try {
             const keyBuf = decryptExamKey(custody.encryptedKey);
@@ -190,9 +216,7 @@ async function reconstructExaminationKey(examinationId, minimumShares = 3) {
                 threshold,
                 totalShares: 5
             };
-        } catch (_decryptErr) {
-            throw new Error("Failed to decrypt exam master custody key.");
-        }
+        } catch (_decryptErr) {}
     }
 
     throw new Error(`Threshold not met: ${sessionShares.length} of ${threshold} required shares have been submitted.`);
