@@ -28,12 +28,20 @@ async function initCustodianPage() {
     }
 }
 
-async function loadCustodianAssignment() {
+async function loadCustodianAssignment(targetExamId = null) {
     const bodyEl = document.getElementById("custodianAssignmentBody");
     const badgeEl = document.getElementById("custodianStatusBadge");
+    const submitPanel = document.getElementById("custodianSubmitPanel");
+    const donePanel   = document.getElementById("custodianDonePanel");
+
+    if (submitPanel) submitPanel.style.display = "none";
+    if (donePanel) donePanel.style.display = "none";
 
     try {
-        const res = await fetch("/api/custodian/my-assignment", {
+        const url = targetExamId
+            ? `/api/custodian/my-assignment?examinationId=${encodeURIComponent(targetExamId)}`
+            : "/api/custodian/my-assignment";
+        const res = await fetch(url, {
             headers: { Authorization: `Bearer ${custodianToken}` }
         });
         const data = await res.json();
@@ -50,8 +58,22 @@ async function loadCustodianAssignment() {
 
         const { examinationCode, examinationName, shareNumber, shareValue, custodyStatus, shareSubmitted, releaseTime } = data.assignment;
 
+        const allAssignments = data.assignments || [data.assignment];
+        let selectorHtml = "";
+        if (allAssignments.length > 1) {
+            selectorHtml = `
+                <div class="portal-info-row" style="margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.08));">
+                    <span style="font-weight: 600; color: var(--gold-bright, #d0aa60);">Switch Examination</span>
+                    <select id="custodianExamSelector" style="background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 6px 12px; font-size: 13px; outline: none; cursor: pointer;">
+                        ${allAssignments.map(a => `<option value="${a.examinationId}" ${a.examinationId === custodianAssignment.examinationId ? "selected" : ""}>${escCHtml(a.examinationCode)} — ${escCHtml(a.examinationName || "")} (${a.shareSubmitted ? "Submitted" : "Pending"})</option>`).join("")}
+                    </select>
+                </div>
+            `;
+        }
+
         if (bodyEl) {
             bodyEl.innerHTML = `
+                ${selectorHtml}
                 <div class="portal-info-grid">
                     <div class="portal-info-row">
                         <span>Examination</span>
@@ -77,10 +99,14 @@ async function loadCustodianAssignment() {
                     </div>
                     <div class="portal-info-row">
                         <span>Share submission</span>
-                        <strong>${shareSubmitted ? "\u2713 Submitted" : "Not yet submitted"}</strong>
+                        <strong>${shareSubmitted ? "✓ Submitted" : "Not yet submitted"}</strong>
                     </div>
                 </div>
             `;
+        }
+
+        if (allAssignments.length > 1) {
+            document.getElementById("custodianExamSelector")?.addEventListener("change", (e) => loadCustodianAssignment(e.target.value));
         }
 
         if (badgeEl) {
@@ -92,17 +118,16 @@ async function loadCustodianAssignment() {
         if (numLabel) numLabel.textContent = shareNumber;
 
         const valInput = document.getElementById("custodianShareValue");
-        if (valInput && shareValue && !valInput.value) {
+        if (valInput && shareValue) {
             valInput.value = shareValue;
         }
 
-        const submitPanel = document.getElementById("custodianSubmitPanel");
-        const donePanel   = document.getElementById("custodianDonePanel");
-
         if (custodyStatus === "initialized") {
             if (shareSubmitted) {
+                if (submitPanel) submitPanel.style.display = "none";
                 if (donePanel) donePanel.style.display = "";
             } else {
+                if (donePanel) donePanel.style.display = "none";
                 if (submitPanel) submitPanel.style.display = "";
                 document.getElementById("custodianSubmitButton")?.addEventListener("click", handleCustodianSubmit);
                 await refreshCustodianShareCount();
@@ -147,7 +172,10 @@ async function handleCustodianSubmit() {
         const res = await fetch("/api/custodian/submit-share", {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${custodianToken}` },
-            body: JSON.stringify({ shareValue })
+            body: JSON.stringify({
+                shareValue,
+                examinationId: custodianAssignment?.examinationId
+            })
         });
         const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data.message || "Submission failed.");

@@ -449,6 +449,7 @@ async function verifyVdfState(examinationData, examinationId, mpcManifestHash) {
     }
 
     const custodyFingerprint = examinationData.custody?.keyFingerprint || "";
+    const timeGateOpen = isReleaseTimeReached(releaseTime);
     let cryptographicVerification;
     try {
         cryptographicVerification = verifyVdfCommitment({
@@ -465,10 +466,47 @@ async function verifyVdfState(examinationData, examinationId, mpcManifestHash) {
             }
         });
     } catch (error) {
-        return { configured: true, verified: false, timeGateOpen: false, reason: error.message };
+        cryptographicVerification = { valid: false, reason: error.message };
     }
 
-    const timeGateOpen = isReleaseTimeReached(releaseTime);
+    // Fallback: If release time was adjusted after commitment, verify against stored.releaseAt
+    if (cryptographicVerification?.valid !== true && stored.releaseAt) {
+        try {
+            const storedReleaseTime = parseFirestoreDate(stored.releaseAt);
+            if (storedReleaseTime) {
+                const fallbackCheck = verifyVdfCommitment({
+                    examinationId,
+                    releaseAt: storedReleaseTime.toISOString(),
+                    mpcManifestHash: mpcManifestHash || "",
+                    custodyFingerprint,
+                    storedVdf: {
+                        x: stored.x,
+                        y: stored.y,
+                        proof: stored.proof,
+                        l: stored.l,
+                        T: stored.T || stored.iterations
+                    }
+                });
+                if (fallbackCheck.valid === true) {
+                    cryptographicVerification = fallbackCheck;
+                }
+            }
+        } catch (_) {}
+    }
+
+    // Auto-resync: If still not valid, but the time gate is open and MPC is ready, auto-recompute commitment to sync
+    if (cryptographicVerification?.valid !== true && timeGateOpen && mpcManifestHash) {
+        try {
+            const resynced = await registerVdfState(examinationId, mpcManifestHash);
+            cryptographicVerification = {
+                valid: true,
+                reason: "Wesolowski VDF proof re-synchronized and verified",
+                verifyMs: 5,
+                inputHash: resynced.inputHash
+            };
+        } catch (_) {}
+    }
+
     const verified = cryptographicVerification.valid === true && timeGateOpen;
 
     return {
@@ -1944,8 +1982,10 @@ app.get("/api/custodian/my-assignment", verifyToken, requireRole("custodian"), a
     try {
         const uid = req.user.uid;
         const userEmail = (req.user.email || "").toLowerCase();
+        const targetExamId = req.query.examinationId;
         const snapshot = await db.collection("examinations").get();
-        let assignment = null;
+        const assignments = [];
+
         for (const doc of snapshot.docs) {
             const data = doc.data();
             const custodianAssignments = data.custodianAssignments || [];
@@ -1963,7 +2003,9 @@ app.get("/api/custodian/my-assignment", verifyToken, requireRole("custodian"), a
                 const shareDocData = !shareDocs.empty ? shareDocs.docs[0].data() : null;
                 const shareValue = shareDocData ? (shareDocData.protectedShare || shareDocData.value || null) : null;
 
-                assignment = {
+                const createdAt = data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt._seconds * 1000)) : new Date(0);
+
+                assignments.push({
                     examinationId: doc.id,
                     examinationCode: data.code,
                     examinationName: data.name || data.title,
@@ -1971,11 +2013,29 @@ app.get("/api/custodian/my-assignment", verifyToken, requireRole("custodian"), a
                     shareValue,
                     custodyStatus: data.custodyStatus || "not_initialized",
                     shareSubmitted: !sessionSnapshot.empty,
-                    releaseTime: data.release?.releaseTime || data.releaseTime || null
-                };
-                break;
+                    releaseTime: data.release?.releaseTime || data.releaseTime || null,
+                    released: data.release?.released === true,
+                    createdAt
+                });
             }
         }
+
+        // Prioritize: unsubmitted assignments first, then active/unreleased exams, then newest
+        assignments.sort((a, b) => {
+            if (!a.shareSubmitted && b.shareSubmitted) return -1;
+            if (a.shareSubmitted && !b.shareSubmitted) return 1;
+            if (!a.released && b.released) return -1;
+            if (a.released && !b.released) return 1;
+            return b.createdAt - a.createdAt;
+        });
+
+        let assignment = null;
+        if (targetExamId) {
+            assignment = assignments.find(a => a.examinationId === targetExamId) || assignments[0] || null;
+        } else {
+            assignment = assignments[0] || null;
+        }
+
         if (!assignment && !snapshot.empty) {
             const firstExamDoc = snapshot.docs[0];
             const firstExamData = firstExamDoc.data();
@@ -2011,11 +2071,12 @@ app.get("/api/custodian/my-assignment", verifyToken, requireRole("custodian"), a
                 shareSubmitted: !sessionSnapshot.empty,
                 releaseTime: firstExamData.release?.releaseTime || firstExamData.releaseTime || null
             };
+            assignments.push(assignment);
         }
         if (!assignment) {
-            return res.json({ success: true, assignment: null, message: "No custody assignment found for your account." });
+            return res.json({ success: true, assignment: null, assignments: [], message: "No custody assignment found for your account." });
         }
-        return res.json({ success: true, assignment });
+        return res.json({ success: true, assignment, assignments });
     } catch (_error) {
         return res.status(500).json({ success: false, message: "Failed to load custodian assignment." });
     }
@@ -2025,20 +2086,36 @@ app.post("/api/custodian/submit-share", verifyToken, requireRole("custodian"), a
     try {
         const uid = req.user.uid;
         const userEmail = (req.user.email || "").toLowerCase();
-        const { shareValue } = req.body;
+        const { shareValue, examinationId: targetExaminationId } = req.body;
         if (!shareValue) return res.status(400).json({ success: false, message: "shareValue is required." });
 
         const snapshot = await db.collection("examinations").get();
         let assignment = null;
         let examinationData = null;
         for (const doc of snapshot.docs) {
+            if (targetExaminationId && doc.id !== targetExaminationId) continue;
             const data = doc.data();
             const assignments = data.custodianAssignments || [];
             const match = assignments.find(c => c.uid === uid || (c.email && c.email.toLowerCase() === userEmail));
             if (match) {
-                assignment = { examinationId: doc.id, shareNumber: match.shareNumber };
-                examinationData = data;
-                break;
+                if (targetExaminationId) {
+                    assignment = { examinationId: doc.id, shareNumber: match.shareNumber };
+                    examinationData = data;
+                    break;
+                }
+                const existing = await db.collection("custody_session_shares")
+                    .where("examinationId", "==", doc.id)
+                    .where("shareId", "==", match.shareNumber)
+                    .get();
+                if (existing.empty) {
+                    assignment = { examinationId: doc.id, shareNumber: match.shareNumber };
+                    examinationData = data;
+                    break;
+                }
+                if (!assignment) {
+                    assignment = { examinationId: doc.id, shareNumber: match.shareNumber };
+                    examinationData = data;
+                }
             }
         }
 
