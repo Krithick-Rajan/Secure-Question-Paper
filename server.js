@@ -1416,6 +1416,7 @@ app.post("/api/release/execute", verifyToken, requireRole("admin"), async (req, 
         );
         const vdfVerified = vdfState.verified === true;
         const canaryClear = examinationData.security?.canaryStatus !== "TRIGGERED";
+        const timeGateOpen = vdfState.timeGateOpen === true || (releaseTime ? isReleaseTimeReached(releaseTime) : false);
         let authorized = release.authorized === true;
         if (!authorized && req.user && req.user.role === "admin") {
             authorized = true;
