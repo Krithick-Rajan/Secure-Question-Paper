@@ -159,8 +159,10 @@ examForm?.addEventListener("submit", async event => {
         const idToken =
             await user.getIdToken();
 
-        const releaseDateTime =
-            `${examDateValue}T${releaseTimeValue}:00`;
+        const localReleaseDate = new Date(`${examDateValue}T${releaseTimeValue}:00`);
+        const releaseDateTime = !Number.isNaN(localReleaseDate.getTime())
+            ? localReleaseDate.toISOString()
+            : `${examDateValue}T${releaseTimeValue}:00`;
 
         const response =
             await fetch(
